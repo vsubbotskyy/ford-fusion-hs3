@@ -97,11 +97,11 @@ print(decoded["speed_kmh"])  # 55.0 km/h
 ```
 
 ### 3. Embedded Rust (`no_std`)
-The crates are `#![no_std]` with no crates.io dependencies. Package names are `ford-fusion-hs3-decode` / `ford-fusion-hs3-tcu`; Rust still `use`s `hs3_decode` / `hs3_tcu`. Depend on a git tag (or `rev`), not floating `main`:
+The crates are `#![no_std]` with no crates.io dependencies of their own. Package names are `ford-fusion-hs3-decode` / `ford-fusion-hs3-tcu`; Rust still `use`s `hs3_decode` / `hs3_tcu`.
 
 ```toml
-ford-fusion-hs3-decode = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
-ford-fusion-hs3-tcu    = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
+ford-fusion-hs3-decode = "0.1.0"
+ford-fusion-hs3-tcu    = "0.1.0"
 ```
 
 Decode-only users can omit `ford-fusion-hs3-tcu`.
