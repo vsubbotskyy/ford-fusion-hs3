@@ -33,7 +33,7 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Distance to Empty (DTE)** | `0x118` (280) | 8 | 4.9 Hz | Bytes 5–6 (16-bit BE) | `raw * 0.1` km | `1021.0` $\rightarrow$ `917.6 km` | Dash DTE display ($r=1.000$) |
 | **Vehicle Speed** | `0x107` (263) | 8 | ~1.8 kHz | Bytes 0–1 (16-bit BE) | `raw * 0.01` km/h | `0.0` $\rightarrow$ `130.0 km/h` | OBD Speed ($r=0.99995$) |
 | **Park latch** | `0x107` (263) | 8 | ~1.8 kHz | Byte 2 | `0x60`="P", `0xE0`=not-P | `"P"`, `"D"` (D means D/R/N) | Bit 7 only; N and R are not on this tap |
-| **Intake MAP** | `0x141` (321) | 8 | 2.4 Hz | Bytes 1–2 (16-bit BE) | `raw * 0.01` kPa | OBD MAP; vacuum when ICE loaded |
+| **High-Res Empower Gauge** | `0x141` (321) | 8 | 2.4 Hz | Bytes 0–1 (16-bit BE) | `raw - 10000` | Center = 10000; drops on regen, rises on power |
 | **Digital Brake Switch** | `0x101` (257) | 8 | ~1.8 kHz | Byte 4, Bit 7 | `(b4 & 0x80) != 0` | `true`, `false` | Pedal contact switch |
 | **Brake Pedal Demand %** | `0x106` (262) | 8 | ~1.8 kHz | Bytes 0–1 (10-bit BE) | `(((b0 & 0x03) << 8) \| b1) / 10.23` | `0.0%` $\rightarrow$ `38.3%` moving (`50%` stop) | Proportional pedal travel |
 | **Accelerator Demand %** | `0x103` (259) | 8 | ~1.5 kHz | Bytes 0–1 (16-bit BE) | `((b0 - 0x80) << 8 \| b1) / 5.3` | `0.0%` $\rightarrow$ `100.0%` | OBD Throttle % ($r=0.998$) |

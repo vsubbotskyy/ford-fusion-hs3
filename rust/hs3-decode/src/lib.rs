@@ -551,28 +551,16 @@ pub fn decode_hv_current(data: &[u8]) -> Option<f32> {
     Some((raw as f32) * 0.05 - 750.0)
 }
 
-/// 0x141 Bytes 1-2 BE: intake MAP. kPa = raw * 0.01. Live frames 80–120 kPa.
-pub fn decode_intake_map(data: &[u8]) -> Option<f32> {
-    if data.len() < 3 {
+/// 0x141 Bytes 0-1 BE: High-Resolution Empower/Charge Gauge.
+/// 16-bit value where 10000 is the zero point (0 kW / 0 Amps).
+/// Drops below 10000 during regen, rises above 10000 during acceleration/power.
+/// Output is scaled to approximately match Amps (multiplier 0.09375).
+pub fn decode_hv_current_gauge(data: &[u8]) -> Option<f32> {
+    if data.len() < 2 {
         return None;
     }
-    let raw = ((data[1] as u16) << 8) | (data[2] as u16);
-    if (8000..=12000).contains(&raw) {
-        Some((raw as f32) * 0.01)
-    } else {
-        None
-    }
-}
-
-/// 0x141 Byte 0: coarse HV current gauge (12 observed levels 34–45).
-/// Amps ≈ (raw − 39) * 24. MAE ~12 A vs 0x07A on morning/highway/afternoon.
-pub fn decode_hv_current_gauge(data: &[u8]) -> Option<f32> {
-    let raw = *data.first()?;
-    if (34..=45).contains(&raw) {
-        Some((raw as f32 - 39.0) * 24.0)
-    } else {
-        None
-    }
+    let raw = ((data[0] as u16) << 8) | (data[1] as u16);
+    Some((raw as f32 - 10000.0) * 0.09375)
 }
 
 /// 0x07A Bytes 2–3: pack voltage. V = ((B2 & 3) << 8 | B3) * 0.5

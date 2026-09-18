@@ -104,8 +104,7 @@ BO_ 282 Msg_0x11A: 8 Gateway
  SG_ VIN_Multiplex_Index : 15|8@0+ (1,0) [0|255] "" Vector__XXX
 
 BO_ 321 Msg_0x141: 8 Gateway
- SG_ HV_Current_Gauge : 7|8@0+ (24,-936) [-120|144] "A" Vector__XXX
- SG_ Intake_MAP : 15|16@0+ (0.01,0) [80|120] "kPa" Vector__XXX
+ SG_ High_Res_Empower_Gauge : 7|16@0+ (1,-10000) [-10000|55535] "" Vector__XXX
  SG_ Pct_0_100 : 39|8@0+ (1,0) [0|100] "%" Vector__XXX
  SG_ TempLike_B3 : 31|8@0+ (1,0) [47|98] "" Vector__XXX
  SG_ B5_Mode : 47|2@0+ (1,0) [0|3] "" Vector__XXX
@@ -172,7 +171,7 @@ BO_ 1438 Msg_0x59E: 8 Gateway
 
 CM_ BO_ 350 "Mux 0x16/0x76/0x86 = GPS (B1:B2 lat, B5:B6 lon, regional origin). Mux 0x01 = MM:SS clock.";
 CM_ SG_ 268 Motor_Temp "NOT motor temp. Live 64-77 / off 0. Retracted — see docs/signals.md.";
-CM_ SG_ 321 Intake_MAP "Suspect. B1 rolls 0-255; B2-40 matches OBD Motor Coil on 2026-09-10. Re-home MAP before trusting.";
+CM_ SG_ 321 High_Res_Empower_Gauge "16-bit analog cluster gauge. 10000 = 0 kW. < 10000 is regen, > 10000 is power. Was previously misidentified as Coarse HV Current (B0) + Intake MAP (B1:B2) due to byte misalignment.";
 CM_ SG_ 272 Motor_Angle "B1:B2 * 360/65536 deg. B3 bit7 resolver-valid. FF FF FF asleep.";
 CM_ SG_ 372 Fuel_Level "B1:B2 BE * 0.1 %. raw 0 and 1000 are invalid, not a full tank.";
 CM_ SG_ 372 Fuel_Sender_Ok "B3 bits 0-1. Always 3 in every capture. Likely sender OK / data valid.";
