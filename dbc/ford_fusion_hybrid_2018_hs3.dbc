@@ -146,6 +146,7 @@ BO_ 435 Msg_0x1B3: 8 BCM
  SG_ Trunk_Ajar : 0|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Rear_Fog : 1|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Door_Unlocked : 2|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Vehicle_In_Motion : 6|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Door_Ajar_RL : 48|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Door_Ajar_RR : 49|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ TCU_Presence : 47|8@0+ (1,0) [0|255] "" Vector__XXX
