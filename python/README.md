@@ -1,8 +1,14 @@
-# hs3-decode (Python)
+# ford-fusion-hs3-decode (Python)
 
 Reverse-engineered decoders and comprehensive byte map for the Ford Fusion Hybrid (CD4) HS-CAN4 (factory TCU tap).
 
-## Installation
+Install from git (import name stays `hs3_decode`):
+
+```bash
+pip install "git+https://github.com/vsubbotskyy/ford-fusion-hs3.git#subdirectory=python"
+```
+
+From a clone:
 
 ```bash
 pip install .

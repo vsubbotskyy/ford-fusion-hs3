@@ -75,15 +75,15 @@ Exactly **63 distinct 11-bit CAN IDs** exist on this bus. A representative sampl
 Load [`dbc/ford_fusion_hybrid_2018_hs3.dbc`](dbc/ford_fusion_hybrid_2018_hs3.dbc) directly into SavvyCAN, python-can, or cantools.
 
 ### 2. Python Package & CLI
-Install locally:
 ```bash
-cd python
-pip install .
+pip install "git+https://github.com/vsubbotskyy/ford-fusion-hs3.git#subdirectory=python"
 ```
+
+Or from a clone: `pip install ./python`.
 
 Parse and validate a capture:
 ```bash
-hs3-parse ../testdata/synthetic_sample.csv --dump
+hs3-parse path/to/capture.csv --dump
 ```
 
 Python library usage:
