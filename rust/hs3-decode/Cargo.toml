@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 description = "Pure no_std Ford Fusion Hybrid (CD4) HS-CAN4 passive decoders"
 license = "MIT"
+repository = "https://github.com/vitaliy-subbotskyy/ford-fusion-hs3"
 
 [dependencies]

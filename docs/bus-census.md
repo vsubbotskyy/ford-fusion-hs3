@@ -49,7 +49,7 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Door Locks State** | `0x1B3` (435) | 8 | 10 Hz | Byte 0, Bit 2 | `(b0 & 0x04) == 0` | `true` (Locked), `false` (Unlocked) | BCM Door Lock contact (command verdict) |
 | **Vehicle In Motion** | `0x1B3` (435) | 8 | 10 Hz | Byte 0, Bit 6 | `(b0 & 0x40) != 0` | `true`, `false` | Motion lockout flag |
 | **Headlights On** | `0x1B3` (435) | 8 | 10 Hz | Byte 1, Bit 3 | `(b1 & 0x08) != 0` | `true`, `false` | Exterior lighting |
-| **Turn signal active** | `0x1B3` (435) | 8 | 10 Hz | Byte 1, Bit 0 | stalk on | `"OFF"` / `"ON"` | Side is **not** on this frame (see `docs/signals.md`) |
+| **Turn signal active** | `0x1B3` (435) | 8 | 10 Hz | Byte 1, Bit 0 | stalk on | `"OFF"` / `"ON"` | Side is **not** on this frame (B6 bit 6 is flash phase, not direction) |
 | **Ignition State** | `0x10E` (270) | 8 | ~1.8 kHz | Byte 0 + Byte 7 | `0x17`="ON"; `0x03`="OFF" only if B7=`00` | `"ON"`, `"OFF"` | B0=`03` while B7≠0 is still ON |
 | **Remote Start Timer** | `0x147` (327) | 8 | 15.2 Hz | Bytes 1–2 (16-bit BE) | `(b1 << 8) \| b2` | `900` $\rightarrow$ `0` seconds | Remote run countdown |
 | **VIN Broadcast** | `0x11A` (282) | 8 | ~1.8 kHz | Multiplexed Chunks 0, 1, 2 | 3 frames concatenated | 17-char ASCII | Mux reassembly (e.g. `3FA6P0XX9YY123456`) |

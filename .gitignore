@@ -16,3 +16,6 @@ build/
 .DS_Store
 .vscode/
 .idea/
+
+# Private RE notes (not for public repo)
+docs-private/

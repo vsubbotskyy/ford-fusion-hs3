@@ -78,7 +78,6 @@ Exactly **63 distinct 11-bit CAN IDs** exist on this bus. A representative sampl
 
 ### Detailed Documentation
 - [Master Bus Census (`docs/bus-census.md`)](docs/bus-census.md): Complete 63-ID breakdown with OBD-II correlation data
-- [Confirmed Signal Findings (`docs/signals.md`)](docs/signals.md): Byte layouts, bitfields, formulas, and empirical evidence
 - [TCU Remote Commands (`docs/tcu-remote.md`)](docs/tcu-remote.md): Remote sequence timing schedules, token handling, and replay protection
 - [Methodology (`docs/methodology.md`)](docs/methodology.md): Paired logging, statistical validation criteria, and hardware guidelines
 - [Harness Scope (`docs/scope.md`)](docs/scope.md): Physical tap boundaries and CD4 platform definition
@@ -160,7 +159,7 @@ cargo test --workspace
 ## Engineering Context
 
 - **Language Choice**: Rust was selected for embedded decoders to enforce memory safety and eliminate buffer overflow risks on a safety-relevant vehicle bus. Python was used for log parsing, statistical correlation, and exploratory analysis.
-- **Validation & WIP Status**: Core physical analogs (speed, RPM, coolant, fuel, odometer) are statistically verified against synchronized OBD-II and cluster ground truth ($r \ge 0.998$). Discrete body states (door ajar, locks, fogs) were confirmed through isolated single-action captures. Other signals (such as intake MAP, auxiliary component temperatures, high-rate raw values, and anti-slosh fuel filtering) are empirical best-fits or active work-in-progress documented in [bus-census.md](docs/bus-census.md) and [signals.md](docs/signals.md).
+- **Validation & WIP Status**: Core physical analogs (speed, RPM, coolant, fuel, odometer) are statistically verified against synchronized OBD-II and cluster ground truth ($r \ge 0.998$). Discrete body states (door ajar, locks, fogs) were confirmed through isolated single-action captures. Other signals (such as auxiliary component temperatures, high-rate raw values, and anti-slosh fuel filtering) are empirical best-fits or active work-in-progress documented in [bus-census.md](docs/bus-census.md).
 
 ---
 
