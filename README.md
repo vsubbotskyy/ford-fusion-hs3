@@ -97,14 +97,14 @@ print(decoded["speed_kmh"])  # 55.0 km/h
 ```
 
 ### 3. Embedded Rust (`no_std`)
-The crates are `#![no_std]` with no crates.io dependencies. Depend on a git tag (or `rev`), not floating `main`:
+The crates are `#![no_std]` with no crates.io dependencies. Package names are `ford-fusion-hs3-decode` / `ford-fusion-hs3-tcu`; Rust still `use`s `hs3_decode` / `hs3_tcu`. Depend on a git tag (or `rev`), not floating `main`:
 
 ```toml
-hs3-decode = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
-hs3-tcu    = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
+ford-fusion-hs3-decode = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
+ford-fusion-hs3-tcu    = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
 ```
 
-Decode-only users can omit `hs3-tcu`.
+Decode-only users can omit `ford-fusion-hs3-tcu`.
 
 ```rust
 use hs3_decode::{decode_vehicle_speed, decode_bcm_status};
@@ -141,7 +141,7 @@ cargo test --workspace
 
 - **Physical Access Tap**: This protocol operates exclusively over the physical HS-CAN4 wiring at the factory TCU connector. It does not provide remote wireless access or bypass physical network boundaries.
 - **Replay Protection**: The BCM enforces strict monotonic sequence counter increments. Capturing and replaying static historical frames will be rejected by the vehicle.
-- **Separate Crates**: Passive signal decoding (`hs3-decode`) is strictly decoupled from command transmission (`hs3-tcu`). Integrators who only require telemetry logging can depend on `hs3-decode` with zero risk of pulling transmission logic.
+- **Separate Crates**: Passive signal decoding (`ford-fusion-hs3-decode`) is strictly decoupled from command transmission (`ford-fusion-hs3-tcu`). Integrators who only require telemetry logging can depend on `ford-fusion-hs3-decode` with zero risk of pulling transmission logic.
 - **Responsible Use**: This documentation is provided for owners repairing, replacing, or maintaining their own equipment.
 
 ---

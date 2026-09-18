@@ -1,9 +1,14 @@
 [package]
-name = "hs3-decode"
-version = "0.1.0"
-edition = "2021"
+name = "ford-fusion-hs3-decode"
+version.workspace = true
+edition.workspace = true
 description = "Pure no_std Ford Fusion Hybrid (CD4) HS-CAN4 passive decoders"
-license = "MIT"
-repository = "https://github.com/vitaliy-subbotskyy/ford-fusion-hs3"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+keywords = ["can", "ford", "automotive", "no-std"]
+categories = ["embedded", "no-std", "parser-implementations"]
 
-[dependencies]
+[lib]
+name = "hs3_decode"

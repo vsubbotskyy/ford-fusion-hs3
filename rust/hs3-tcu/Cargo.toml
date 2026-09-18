@@ -1,8 +1,14 @@
 [package]
-name = "hs3-tcu"
-version = "0.1.0"
-edition = "2021"
+name = "ford-fusion-hs3-tcu"
+version.workspace = true
+edition.workspace = true
 description = "Ford Fusion Hybrid (CD4) HS-CAN4 TCU command encoding, factory timing, and presence set"
-license = "MIT"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+keywords = ["can", "ford", "automotive", "no-std"]
+categories = ["embedded", "no-std", "encoding"]
 
-[dependencies]
+[lib]
+name = "hs3_tcu"

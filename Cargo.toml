@@ -4,3 +4,11 @@ members = [
     "rust/hs3-decode",
     "rust/hs3-tcu",
 ]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/vsubbotskyy/ford-fusion-hs3"
+homepage = "https://github.com/vsubbotskyy/ford-fusion-hs3"
+readme = "README.md"
