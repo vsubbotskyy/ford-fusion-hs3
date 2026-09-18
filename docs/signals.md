@@ -848,4 +848,20 @@ RPM has to be computed **on the CAN RX thread**, not in Grafana.
 
 `0x10F` is the same class (high-rate 16-bit, aliased at 1 Hz capture). Do not overlay it either until it has an on-board derived quantity.
 
+---
+
+## Questionable Signals & Pending RE Log Targets (2026-09-18)
+
+This register tracks signals where decoding or physical meaning is ambiguous, contradicted by real-world driving observations, or pending dedicated ground-truth CAN captures. **Do not guess logic or commit speculative decoders**—verify with labeled logs first.
+
+| Signal / Field | CAN ID & Location | Current Decoding / Behavior | Real-World Anomaly & Questions | Required Capture / Test to Resolve |
+|---|---|---|---|---|
+| **`flasher_on`** (formerly labeled "HAZARDS") | `0x1B3` Byte 1 Bit 1 | `(data[1] >> 1) & 0x01 != 0`<br>Exported as `flasher_bulb_on` | **Fires in lockstep with normal turn signals** even when hazard button is never touched. Grafana mapped `1` to "HAZARDS", creating false hazard events. Is this bit just the bulb/relay blink pulse, or does a dedicated hazard flag exist on HS3? | Labeled capture: (1) Hazards pressed while parked, (2) Left turn only, (3) Right turn only, (4) Hazards pressed while turn stalk active. |
+| **Turn Direction** (Left vs Right) | `0x1B3` B1 bit 0 & B6 bit 6 | B1 bit 0 = active<br>B6 bit 6 = flash phase | Turn direction (Left vs Right) is **not present on `0x1B3`**. B6 bit 6 toggles on phase, not side. Grafana left/right mapping was an artifact of sampling phase. | Labeled left-turn vs right-turn log comparing all 63 HS3 IDs to determine if stalk direction is gatewayed onto HS3 at all. |
+| **`intake_map_kpa`** | `0x141` Bytes 0–2 | Formerly B1:B2 MAP scaling | Bytes 0–1 are the Empower / power gauge (offset 10000). Byte 1 is an 8-bit rolling counter. HS3 does not appear to carry true intake MAP. | OBD-II MAP PID paired with high-load ICE acceleration log to check if MAP is hidden on another frame. |
+| **`motor_temp`** | `0x10C` vs `0x141` Byte 2 | Suppressed (`None`) in firmware | `0x10C` does not track OBD motor coil temp (hovers in 64–77 range). `0x141` Byte 2 ($raw - 40$) is strong candidate ($r=1.000$, MAE $0.05^\circ\text{C}$). | Cold-start capture from cold soak to fully warmed motor with simultaneous OBD motor temp PID. |
+| **`low_fuel_lamp`** | `0x174` Byte 3 Bit 7 | Flag `(b3 & 0x80) != 0` | Becomes active during normal fuel levels; acts as fuel sender anti-slosh/slosh dampening flag rather than cluster warning lamp. | Empty-tank capture (DTE $< 50\text{ km}$, low fuel cluster chime/lamp on) to identify the real cluster lamp bit. |
+| **`vehicle_in_motion`** vs **`tcu_motion`** | `0x1B3` B0 bit 6 vs `0x112` Byte 4 | `(b0 & 0x40) != 0` vs `b4 == 0x03` | Both are currently logged and charted. `0x1B3` is BCM motion lockout flag; `0x112` is TCU motion status. | Low-speed crawl ($< 3\text{ km/h}$) and reverse log to observe threshold speeds, transition delays, and edge cases. |
+
+
 
