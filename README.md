@@ -43,14 +43,19 @@ This repository provides the empirical, ground-truth answer for this vehicle fam
 
 ## Root Cause Analysis (RCA) Case Studies
 
-Two key engineering challenges encountered and resolved during reverse-engineering:
+Three engineering challenges encountered and resolved during reverse-engineering:
 
 ### 1. The Sleep-Token Trap (`0x100`)
 - **Symptom:** Remote unlock worked immediately after driving, but failed consistently after the car sat parked overnight.
 - **Root Cause:** The Body Control Module (BCM) broadcasts a 16-bit rolling token on `0x100` Bytes 0–1. When the car enters bus sleep, `0x100` continues broadcasting low-frequency sleep heartbeats where Bytes 0–1 are `00 00`. A naive decoder that saves the latest received token overwrote the valid rolling token with zeros. When woken, the BCM rejected the command frame containing token `00 00`.
 - **Resolution:** Persist only the **last non-zero token**. Sleep heartbeats are explicitly filtered out.
 
-### 2. Bus Identity & False-Friend Naming (`0x1B3` vs HS1 `BodyInfo_3`)
+### 2. The Command Verdict Rule (`0x1B3`)
+- **Symptom:** Inconsistent lock test results during validation.
+- **Root Cause:** Hearing actuators click is not protocol evidence. The CD4 BCM auto-relocks in ~25–30 seconds if no door is opened. A lock command on an already-locked car produces false positives.
+- **Resolution:** The sole verdict on this tap is **`0x1B3` Byte 0 Bit 2** (`0` = locked, `1` = unlocked). Read it before TX, run the schedule, and watch the bit across the hold window. See [tcu-remote.md](docs/tcu-remote.md) §7.
+
+### 3. Bus Identity & False-Friend Naming (`0x1B3` vs HS1 `BodyInfo_3`)
 - **Symptom:** False detection of turn signal direction (left vs right).
 - **Root Cause:** Public Ford HS1 DBCs document `0x3B3` (`BodyInfo_3_FD1`) carrying turn side, ignition, and lighting. On HS-CAN4, `0x1B3` shares identical bit locations for door-ajar and fog lamps, but turn signal side is absent (Byte 1 Bit 0 is stalk on/off, Byte 1 Bit 1 is flasher bulb phase).
 - **Resolution:** Rejected the HS1 DBC template. Every bit was isolated via single-action labelled captures.
@@ -78,6 +83,7 @@ Exactly **63 distinct 11-bit CAN IDs** exist on this bus. A representative sampl
 
 ### Detailed Documentation
 - [Master Bus Census (`docs/bus-census.md`)](docs/bus-census.md): Complete 63-ID breakdown with OBD-II correlation data
+- [Signal notes (`docs/signals.md`)](docs/signals.md): Closed `0x1B3` bits, negative results, retracted analogs
 - [TCU Remote Commands (`docs/tcu-remote.md`)](docs/tcu-remote.md): Remote sequence timing schedules, token handling, and replay protection
 - [Methodology (`docs/methodology.md`)](docs/methodology.md): Paired logging, statistical validation criteria, and hardware guidelines
 - [Harness Scope (`docs/scope.md`)](docs/scope.md): Physical tap boundaries and CD4 platform definition
