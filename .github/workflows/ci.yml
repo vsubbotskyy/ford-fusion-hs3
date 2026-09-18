@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rust-test:
+    name: Rust Workspace Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run Cargo Tests
+        working-directory: rust
+        run: cargo test --workspace --verbose
+
+  python-test:
+    name: Python Package & Parser Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run Unit Tests
+        env:
+          PYTHONPATH: python
+        run: python3 -m unittest discover -s python/tests
+      - name: Test Parser on Synthetic Fixture
+        run: python3 python/hs3_decode/parser.py testdata/synthetic_sample.csv --dump

@@ -1,0 +1,182 @@
+VERSION ""
+
+NS_ :
+
+BS_:
+
+BU_: TCU Gateway BCM PCM BECM
+
+BO_ 122 Msg_0x07A: 8 Gateway
+ SG_ BattTrac_I_Actl : 6|15@0+ (0.05,-750) [-750|888.25] "A" Vector__XXX
+ SG_ BattTrac_U_Actl : 17|10@0+ (0.5,0) [0|510.5] "V" Vector__XXX
+ SG_ BattTracMil_D_Rq : 19|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ BattTracOff_B_Actl : 20|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ BattTracOffFst_D_Actl : 22|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ VehStrtInhbt_B_RqBatt : 23|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ BattTrac_U_LimHi : 39|8@0+ (2,0) [0|510] "V" Vector__XXX
+ SG_ BattTrac_U_LimLo : 47|8@0+ (2,0) [0|510] "V" Vector__XXX
+
+BO_ 132 Msg_0x084: 8 Gateway
+ SG_ Clock_Day : 23|16@0+ (1,0) [0|65535] "" Vector__XXX
+ SG_ Clock_Minute : 39|8@0+ (1,0) [0|59] "min" Vector__XXX
+ SG_ Clock_Second : 47|8@0+ (1,0) [0|59] "s" Vector__XXX
+ SG_ Clock_Hour : 55|8@0+ (1,0) [0|23] "h" Vector__XXX
+
+BO_ 256 Msg_0x100: 8 BCM
+ SG_ Rolling_Auth_Token : 7|16@0+ (1,0) [0|65535] "" Vector__XXX
+ SG_ Token_SlowCount : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Token_AliveBit : 63|1@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 257 Msg_0x101: 8 Gateway
+ SG_ Brake_Pressed : 32|1@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 259 Msg_0x103: 8 Gateway
+ SG_ Accelerator_Demand : 7|16@0+ (0.1887,-24188) [0|100] "%" Vector__XXX
+ SG_ Engine_RPM_Raw : 23|16@0+ (2,-114688) [0|8000] "rpm" Vector__XXX
+
+BO_ 260 Msg_0x104: 8 Gateway
+ SG_ Alive_2bit : 1|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ HighRate8 : 15|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Engine_Coolant_Temp : 23|8@0+ (1.0,-60) [-40|140] "degC" Vector__XXX
+ SG_ HeatSoak_Analog : 39|8@0+ (1,0) [50|90] "" Vector__XXX
+
+BO_ 261 Msg_0x105: 8 Gateway
+ SG_ Hybrid_Mode : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Hybrid_Strategy : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 262 Msg_0x106: 8 Gateway
+ SG_ Brake_Pedal_Pct : 7|10@0+ (0.09775,0) [0|100] "%" Vector__XXX
+ SG_ Brake_Cluster : 23|16@0+ (1,0) [0|65535] "" Vector__XXX
+ SG_ VehLong_A_Actl : 33|10@0+ (0.035,-17.9) [-17.9|17.85] "m/s2" Vector__XXX
+ SG_ Raw12 : 51|12@0+ (1,0) [0|4095] "" Vector__XXX
+
+BO_ 263 Msg_0x107: 8 Gateway
+ SG_ Vehicle_Speed : 7|16@0+ (0.01,0) [0|260] "km/h" Vector__XXX
+ SG_ Park_Latch : 23|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 264 Msg_0x108: 8 Gateway
+ SG_ Hybrid_SOC : 7|8@0+ (0.5,0) [40|100] "%" Vector__XXX
+
+BO_ 265 Msg_0x109: 8 Gateway
+ SG_ Odometer : 7|24@0+ (1,0) [0|2000000] "km" Vector__XXX
+ SG_ Fuel_Accumulator : 31|16@0+ (1,0) [0|65535] "" Vector__XXX
+ SG_ Odo_Companion : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 266 Msg_0x10A: 8 Gateway
+ SG_ Transaxle_State : 23|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 268 Msg_0x10C: 8 Gateway
+ SG_ Component_Temp_Raw : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Motor_Temp : 55|8@0+ (1,0) [20|120] "degC" Vector__XXX
+
+BO_ 270 Msg_0x10E: 8 BCM
+ SG_ Ignition_State : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Slow_Analog_B1 : 15|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Slow_Analog_B3 : 31|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Drive_Alt_Bit5 : 37|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Drive_Alt_B5bit2 : 42|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Analog_B6 : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Drive_Active : 63|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 271 Msg_0x10F: 8 Gateway
+ SG_ HighRate_Raw16 : 7|16@0+ (1,0) [0|65535] "" Vector__XXX
+
+BO_ 272 Msg_0x110: 8 Gateway
+ SG_ MG_High : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Motor_Angle : 15|16@0+ (0.005493164,0) [0|359.995] "deg" Vector__XXX
+ SG_ Motor_Angle_Valid : 24|1@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 274 Msg_0x112: 8 TCU
+ SG_ TCU_Motion : 39|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ TCU_Motion_Analog : 47|8@0+ (1,0) [0|232] "" Vector__XXX
+ SG_ TCU_SlowCount : 63|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 275 Msg_0x113: 8 Gateway
+ SG_ Trip_Fuel_Used : 15|8@0+ (0.1,0) [0|25.5] "L" Vector__XXX
+ SG_ Trip_Distance : 39|16@0+ (0.1,0) [0|6553.5] "km" Vector__XXX
+
+BO_ 280 Msg_0x118: 8 Gateway
+ SG_ ICE_Distance : 7|24@0+ (0.1,0) [0|1677721] "km" Vector__XXX
+ SG_ Trip_ICE_Distance : 31|16@0+ (0.1,0) [0|6553.5] "km" Vector__XXX
+ SG_ Distance_To_Empty : 47|16@0+ (0.1,0) [0|6553.5] "km" Vector__XXX
+
+BO_ 282 Msg_0x11A: 8 Gateway
+ SG_ VIN_Multiplex_Index : 15|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 321 Msg_0x141: 8 Gateway
+ SG_ HV_Current_Gauge : 7|8@0+ (24,-936) [-120|144] "A" Vector__XXX
+ SG_ Intake_MAP : 15|16@0+ (0.01,0) [80|120] "kPa" Vector__XXX
+ SG_ Pct_0_100 : 39|8@0+ (1,0) [0|100] "%" Vector__XXX
+ SG_ TempLike_B3 : 31|8@0+ (1,0) [47|98] "" Vector__XXX
+ SG_ B5_Mode : 47|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ B5_Analog6 : 45|6@0+ (1,0) [31|40] "" Vector__XXX
+ SG_ TempLike_B7 : 63|8@0+ (1,0) [40|98] "" Vector__XXX
+
+BO_ 322 Msg_0x142: 8 Gateway
+ SG_ Ambient_Temp : 7|8@0+ (1,-64) [-20|50] "degC" Vector__XXX
+ SG_ Analog7 : 15|7@0+ (1,0) [0|127] "" Vector__XXX
+ SG_ ICE_Running : 23|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 326 Msg_0x146: 8 TCU
+ SG_ Tcu_Command : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Tcu_Seq : 31|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 327 Msg_0x147: 8 Gateway
+ SG_ Remote_Start_Timer : 15|16@0+ (1,0) [0|900] "s" Vector__XXX
+
+BO_ 339 Msg_0x153: 8 Gateway
+ SG_ Trip_Avg_Mpg : 39|16@0+ (0.1,0) [0|400] "mpg" Vector__XXX
+
+BO_ 350 Msg_0x15E: 8 Gateway
+ SG_ Mux_Index : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Gps_Lat_Raw : 15|16@0+ (0.000256034,43.6591) [40|60] "deg" Vector__XXX
+ SG_ Gps_Lat_Fine : 31|8@0+ (1e-6,-0.000128) [-0.000128|0.000127] "deg" Vector__XXX
+ SG_ Gps_Lon_Raw : 47|16@0+ (0.000016,5.0) [5|6.05] "deg" Vector__XXX
+ SG_ Clock_Minute_Mux : 23|8@0+ (1,0) [0|59] "min" Vector__XXX
+ SG_ Clock_Second_Mux : 31|8@0+ (1,0) [0|59] "s" Vector__XXX
+
+BO_ 372 Msg_0x174: 8 Gateway
+ SG_ Fuel_Level : 15|16@0+ (0.1,0) [0|100] "%" Vector__XXX
+ SG_ Fuel_Sender_Ok : 25|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ Fuel_Gauge_Update : 31|1@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 373 Msg_0x175: 8 Gateway
+ SG_ Steering_Angle : 31|16@0+ (0.1,-819.2) [-819.2|819.1] "deg" Vector__XXX
+
+BO_ 435 Msg_0x1B3: 8 BCM
+ SG_ Trunk_Ajar : 0|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Rear_Fog : 1|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Door_Unlocked : 2|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Door_Ajar_RL : 48|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Door_Ajar_RR : 49|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ TCU_Presence : 47|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Front_Fog : 56|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Hood_Ajar : 59|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Door_Ajar_FR : 60|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Door_Ajar_FL : 61|1@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 437 Msg_0x1B5: 8 BCM
+ SG_ Tire_Pressure_FL : 15|8@0+ (0.01,0) [0|2.55] "bar" Vector__XXX
+ SG_ Tire_Pressure_FR : 31|8@0+ (0.01,0) [0|2.55] "bar" Vector__XXX
+ SG_ Tire_Pressure_RL : 47|8@0+ (0.01,0) [0|2.55] "bar" Vector__XXX
+ SG_ Tire_Pressure_RR : 63|8@0+ (0.01,0) [0|2.55] "bar" Vector__XXX
+
+BO_ 554 Msg_0x22A: 8 TCU
+ SG_ TcuCmd_Active : 63|8@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 1424 Msg_0x590: 8 TCU
+ SG_ NM_Source : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 1438 Msg_0x59E: 8 Gateway
+ SG_ GWM_NM : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+
+CM_ BO_ 350 "Mux 0x16/0x76/0x86 = GPS (B1:B2 lat, B5:B6 lon, regional origin). Mux 0x01 = MM:SS clock.";
+CM_ SG_ 268 Motor_Temp "NOT motor temp. Live 64-77 / off 0. Retracted — see docs/signals.md.";
+CM_ SG_ 321 Intake_MAP "Suspect. B1 rolls 0-255; B2-40 matches OBD Motor Coil on 2026-09-10. Re-home MAP before trusting.";
+CM_ SG_ 272 Motor_Angle "B1:B2 * 360/65536 deg. B3 bit7 resolver-valid. FF FF FF asleep.";
+CM_ SG_ 372 Fuel_Level "B1:B2 BE * 0.1 %. raw 0 and 1000 are invalid, not a full tank.";
+CM_ SG_ 372 Fuel_Sender_Ok "B3 bits 0-1. Always 3 in every capture. Likely sender OK / data valid.";
+CM_ SG_ 372 Fuel_Gauge_Update "B3 bit 7. NOT the low-fuel lamp. 1-5 s strobe at <7 km/h when filtered % commits. Real lamp unmapped — see docs/signals.md.";
+CM_ SG_ 322 ICE_Running "0x64 = EV, 0x68 = ICE running.";
+CM_ SG_ 261 Hybrid_Mode "0xE0 parked, 0xE8 city/EV-heavy, 0xF8 highway.";
+CM_ SG_ 339 Trip_Avg_Mpg "Native 0.1 US mpg/LSB. Metric conversion: L/100 km = 235.215 / mpg.";
