@@ -15,7 +15,6 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Run Cargo Tests
-        working-directory: rust
         run: cargo test --workspace --verbose
 
   python-test:

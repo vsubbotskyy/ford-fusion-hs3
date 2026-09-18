@@ -118,9 +118,15 @@ print(decoded["speed_kmh"])  # 55.0 km/h
 ```
 
 ### 3. Embedded Rust (`no_std`)
-The Rust crates in `rust/` are `#![no_std]` and have zero external dependencies.
+The crates are `#![no_std]` with no crates.io dependencies. Depend on a git tag (or `rev`), not floating `main`:
 
-#### Passive Decoding (`hs3-decode`)
+```toml
+hs3-decode = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
+hs3-tcu    = { git = "https://github.com/vsubbotskyy/ford-fusion-hs3" }
+```
+
+Decode-only users can omit `hs3-tcu`.
+
 ```rust
 use hs3_decode::{decode_vehicle_speed, decode_bcm_status};
 
@@ -132,7 +138,6 @@ if let Some(bcm) = decode_bcm_status(&frame_data) {
 }
 ```
 
-#### Command Sequencing (`hs3-tcu`)
 ```rust
 use hs3_tcu::{factory_door_sequence, Auth, DoorCmd};
 
@@ -145,9 +150,9 @@ for step in schedule {
 }
 ```
 
-Run host tests:
+Host tests:
+
 ```bash
-cd rust
 cargo test --workspace
 ```
 

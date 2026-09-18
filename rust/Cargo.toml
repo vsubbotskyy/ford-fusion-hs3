@@ -1,6 +1,0 @@
-[workspace]
-members = [
-    "hs3-decode",
-    "hs3-tcu",
-]
-resolver = "2"
