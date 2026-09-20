@@ -236,7 +236,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
     0x141: [
         _s("HV current gauge; A≈(raw-39)*24 (12-level; MAE ~12 A vs 0x07A)"),
         _s("rolls 0-255; MAP B1:B2 likely false (counter)"),
-        _s("motor coil temp = B2-40 degC; r=0.999 MAE 0.22 vs OBD (134 samples)"),
+        _s("motor coil temp = B2-40 degC"),
         _s("temp-like analog 47-98; tracks B7 MAE~1.7 (not 0x104 coolant)"),
         _s("percent 0-100 raw (not OBD engine load or throttle)"),
         _s("bits7-6 2-bit field + bits5-0 analog always 0x1F-0x28 (all logs)"),
@@ -321,9 +321,9 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _f("bit0 LEFT turn latch; bit1 left bulb flash; bit3 headlights; bits7-6 day(1)/night(2)"),
         _s("interior dimming; day/night dependent (84/08 dark, 14/04 + 11 daylight)"),
         _s("interior dimming level; pairs with B2"),
-        _f("bit3 RIGHT turn cluster echo (lockstep with B7 bit7); with B1 bit1 = lock/unlock courtesy flash"),
-        _s("ambient twilight level: 00 dark / 01 dawn-dusk / 05 daylight (NOT TCU presence)"),
-        _f("bit0 RL ajar; bit1 RR ajar; bit6 LEFT turn cluster echo (lockstep with B1 bit1)"),
+        _f("bit3 right bulb cluster echo; with B1 bit1 = courtesy flash"),
+        _s("ambient twilight level: 00 dark / 01 dawn-dusk / 05 daylight"),
+        _f("bit0 RL ajar; bit1 RR ajar; bit6 left bulb cluster echo"),
         _f("bit0 front fog; bit3 hood ajar; bit4 FR ajar; bit5 FL ajar; bit6 RIGHT turn latch; bit7 right bulb flash"),
     ],
     0x1B4: [

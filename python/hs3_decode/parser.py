@@ -216,8 +216,6 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         elif d[0] == 0xC0:
             out["vin_alt_mux"] = True
     elif cid == 0x141 and len(d) >= 3:
-        # B2 = Motor Coil Temperature, raw - 40 degC.
-        # r=0.999, MAE 0.22 degC vs OBD "Motor Coil Temp" (134 samples, 23-66 degC).
         if d[2] >= 40:
             out["motor_coil_c"] = d[2] - 40
         raw = be16(d, 1)
@@ -259,7 +257,6 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         mux = d[0]
         out["mux"] = mux
         if mux == 0x01 and len(d) >= 6 and d[1] <= 23 and d[2] <= 59 and d[3] <= 59:
-            # UTC wall clock at 1 Hz. 0x084 carries the same time in local zone.
             out["clock_utc"] = f"{d[1]:02d}:{d[2]:02d}:{d[3]:02d}"
             out["clock"] = out["clock_utc"]
             if 1 <= d[5] <= 12 and 1 <= d[4] <= 31:
@@ -288,14 +285,8 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             if day_night in (1, 2):
                 out["day_night"] = "DAY" if day_night == 1 else "NIGHT"
         if len(d) >= 6:
-            # B5 is ambient twilight level, NOT TCU presence:
-            # 0x00 dark / 0x01 dawn-dusk / 0x05 daylight.
             out["ambient_light"] = d[5]
         if len(d) >= 8:
-            # Turn signals, verified against GPS heading over 16 turns:
-            # LEFT  = B1 bit0 latch, B1 bit1 + B6 bit6 flash in lockstep.
-            # RIGHT = B7 bit6 latch, B7 bit7 + B4 bit3 flash in lockstep.
-            # HAZARD (both latches) is inferred - never seen in any capture.
             left = bool(d[1] & 0x01)
             right = bool((d[7] >> 6) & 0x01)
             out["turn_left"] = left
@@ -311,8 +302,6 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             left_bulb = bool((d[1] >> 1) & 1)
             right_bulb = bool((d[7] >> 7) & 1)
             out["flasher_bulb_on"] = left_bulb or right_bulb
-            # Both bulbs lit with neither latch = BCM lock/unlock courtesy flash,
-            # the observable ack for a door command (~0.3 s after 0x146 0C / 04).
             out["courtesy_flash"] = left_bulb and right_bulb and not (left and right)
             out["front_fog"] = bool(d[7] & 1)
             out["hood_ajar"] = bool((d[7] >> 3) & 1)

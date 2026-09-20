@@ -54,7 +54,7 @@ A common failure in automotive reverse-engineering is copying signal names from 
 - On this vehicle's HS-CAN4 tap, `0x1B3` carries door ajar and fog light flags in identical bit positions, but the turn signal bits occupy entirely different locations:
   - Stalk activation is present on Byte 1 Bit 0.
   - Flasher bulb phase is on Byte 1 Bit 1.
-  - **Turn signal side DOES exist on `0x1B3`, but not where the HS1 layout puts it.** LEFT is B1 bit 0 (latch) with B1 bit 1 / B6 bit 6 flashing; RIGHT is B7 bit 6 (latch) with B7 bit 7 / B4 bit 3 flashing. This was established in 2026-09 by integrating GPS track heading across turn-signal episodes, not by borrowing Ford names. An earlier hunt concluded "no side" because it defined *signal active* as B1 bit 0 — which only asserts on a left turn, so right turns looked idle.
+  - **Turn signal side exists on `0x1B3`, but not in the HS1 layout positions.** LEFT is Byte 1 Bit 0 (latch) with Byte 1 Bit 1 / Byte 6 Bit 6 flashing; RIGHT is Byte 7 Bit 6 (latch) with Byte 7 Bit 7 / Byte 4 Bit 3 flashing.
 - Attempting to force the HS1 bitfield onto `0x1B3` resulted in false turn-signal side detection. The rule: **Each bus tap must be verified independently from ground truth.**
 
 ---

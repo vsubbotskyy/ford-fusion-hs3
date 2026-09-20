@@ -2,56 +2,21 @@
 
 ## 0.3.0 — 2026-09-20
 
-Restores a signal 0.2.0 removed on a wrong reading.
-
 ### Added
-- `BcmStatus::courtesy_flash` — both indicators lit with **neither** stalk latch set.
-  This is the BCM's lock/unlock confirmation blink and the observable ack for a door
-  command: it fires ~0.3 s after `0x146` lock (`0C`) or unlock (`04`), and also on a
-  physical keyfob action with no `0x146` at all (`lock-keyfob.csv`, t=61.7). Example
-  frame from `lock-A.csv`: `10 42 04 00 EE 05 40 80` — all four flash bits set, both
-  latches clear. Gated on `!hazards_active` so a hazard session can never be read as
-  a command ack.
+- `BcmStatus::courtesy_flash`: lock/unlock confirmation flash (flasher bulbs active without stalk latch), gated on `!hazards_active`.
 
 ### Fixed
-- 0.2.0 removed `tcu_ack` on the grounds that `B1 bit1 && B4 bit3` was "really
-  hazards". That was wrong. Those are the two *bulb* bits, and they co-assert during
-  the courtesy flash while both *latches* stay clear — hazards would set the latches.
-  The signal is real and was load-bearing for command acknowledgement; it is back
-  under an accurate name. `tcu_ack` itself stays gone: it was never a TCU ack.
+- Replaced misclassified `tcu_ack` with `courtesy_flash` on `0x1B3`.
 
 ## 0.2.0 — 2026-09-20
 
-Breaking. Corrects two signals on `0x1B3` that were mislabelled, and adds three.
-
 ### Breaking
-- `BcmStatus::tcu_presence` → **`ambient_light`**. `0x1B3` B5 is the ambient twilight
-  level (`0x00` dark / `0x01` dawn-dusk / `0x05` daylight), not a TCU presence ack.
-  The old label was a capture-set confound: every TCU-unplugged capture was recorded
-  after dark and every franken-modem drive was pre-dawn. `0x590` is the real
-  TCU-presence probe.
-- `BcmStatus::tcu_ack` removed. It was `B1 bit1 && B4 bit3` — left bulb AND right
-  flasher, i.e. hazards; never an acknowledgement.
-- `GatewayMux::Clock` now carries `hour`, `minute`, `second`, `day`, `month`
-  (was `minute`, `second` only) and is documented as **UTC**.
-- `BcmStatus::turn_signal` now returns `"OFF"` / `"LEFT"` / `"RIGHT"` / `"HAZARD"`
-  instead of `"OFF"` / `"ON"`.
+- Renamed `BcmStatus::tcu_presence` to `ambient_light` on `0x1B3` B5 (`0x00` dark, `0x01` dawn/dusk, `0x05` daylight).
+- Removed `BcmStatus::tcu_ack`.
+- `GatewayMux::Clock` now carries `hour`, `minute`, `second`, `day`, `month` (UTC).
+- `BcmStatus::turn_signal` now returns `"OFF"`, `"LEFT"`, `"RIGHT"`, or `"HAZARD"` instead of `"OFF"` / `"ON"`.
 
 ### Added
-- `BcmStatus::turn_left_active`, `turn_right_active`, `hazards_active`.
-  Turn side is on `0x1B3` after all: LEFT = B1 bit 0 latch with B1 bit 1 / B6 bit 6
-  flashing, RIGHT = B7 bit 6 latch with B7 bit 7 / B4 bit 3 flashing. Verified by
-  integrating GPS track heading over turn episodes: 16 real turns, perfect
-  separation, zero contradictions. The earlier "side is not on this frame"
-  conclusion came from defining *signal active* as B1 bit 0, which only asserts on
-  a left turn.
-- `BcmStatus::day_night` from `0x1B3` B1 bits[7:6] (`1` day, `2` night).
-- `decode_motor_coil_temp()` for `0x141` B2 (`raw - 40` °C). r=0.999, MAE 0.22 °C
-  against the paired OBD `Motor Coil Temp` over a 23→66 °C warm-up (134 samples).
-
-### Notes
-- `HAZARD` is **inferred**: no frame in any of the 24 captures has both latches set.
-- `0x10C` B6 remains unidentified. It is not a climate setpoint and not cabin air
-  temperature (r=0.055 vs OBD `Temp Inside Car` over a 43-minute drive).
-- `0x174` B6:B7 is one 16-bit monotonic counter, not two signals; it tracks neither
-  distance nor fuel.
+- `BcmStatus::turn_left_active`, `turn_right_active`, and `hazards_active` directional signals on `0x1B3`.
+- `BcmStatus::day_night` from `0x1B3` B1 bits[7:6] (`"DAY"` / `"NIGHT"`).
+- `decode_motor_coil_temp()` for `0x141` B2 (`raw - 40` °C).

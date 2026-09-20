@@ -49,16 +49,16 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Door Locks State** | `0x1B3` (435) | 8 | 10 Hz | Byte 0, Bit 2 | `(b0 & 0x04) == 0` | `true` (Locked), `false` (Unlocked) | BCM Door Lock contact (command verdict) |
 | **Vehicle In Motion** | `0x1B3` (435) | 8 | 10 Hz | Byte 0, Bit 6 | `(b0 & 0x40) != 0` | `true`, `false` | Motion lockout flag |
 | **Headlights On** | `0x1B3` (435) | 8 | 10 Hz | Byte 1, Bit 3 | `(b1 & 0x08) != 0` | `true`, `false` | Exterior lighting |
-| **Turn signal (side)** | `0x1B3` (435) | 8 | 10 Hz | LEFT: B1 bit 0 · RIGHT: B7 bit 6 | latch asserted | `"OFF"` / `"LEFT"` / `"RIGHT"` / `"HAZARD"` | Side verified from GPS track heading over 16 turns (0 contradictions) |
-| **Turn bulb flash** | `0x1B3` (435) | 8 | 10 Hz | LEFT: B1 bit 1 + B6 bit 6 · RIGHT: B7 bit 7 + B4 bit 3 | ~1.5 Hz | `true` / `false` | The two bits of a side toggle in exact lockstep |
+| **Turn signal (side)** | `0x1B3` (435) | 8 | 10 Hz | LEFT: B1 bit 0 · RIGHT: B7 bit 6 | latch asserted | `"OFF"` / `"LEFT"` / `"RIGHT"` / `"HAZARD"` | Directional stalk latches |
+| **Turn bulb flash** | `0x1B3` (435) | 8 | 10 Hz | LEFT: B1 bit 1 + B6 bit 6 · RIGHT: B7 bit 7 + B4 bit 3 | ~1.5 Hz | `true` / `false` | Bulb flash phase |
 | **Ignition State** | `0x10E` (270) | 8 | ~1.8 kHz | Byte 0 + Byte 7 | `0x17`="ON"; `0x03`="OFF" only if B7=`00` | `"ON"`, `"OFF"` | B0=`03` while B7≠0 is still ON |
 | **Remote Start Timer** | `0x147` (327) | 8 | 15.2 Hz | Bytes 1–2 (16-bit BE) | `(b1 << 8) \| b2` | `900` $\rightarrow$ `0` seconds | Remote run countdown |
 | **VIN Broadcast** | `0x11A` (282) | 8 | ~1.8 kHz | Multiplexed Chunks 0, 1, 2 | 3 frames concatenated | 17-char ASCII | Mux reassembly (e.g. `3FA6P0XX9YY123456`) |
 | **BCM Auth Token** | `0x100` (256) | 8 | ~1.9 kHz | Bytes 0–1 (16-bit BE) | `(b0 << 8) \| b1` | Increments ~800ms | BCM rolling challenge (must ignore zeros) |
-| **Ambient light level** | `0x1B3` (435) | 8 | 10 Hz | Byte 5 | raw | `0x00` dark / `0x01` dawn-dusk / `0x05` daylight | Twilight sensor. Formerly mislabelled "TCU presence" — see methodology |
+| **Ambient light level** | `0x1B3` (435) | 8 | 10 Hz | Byte 5 | raw | `0x00` dark / `0x01` dawn-dusk / `0x05` daylight | Twilight sensor |
 | **Day / night state** | `0x1B3` (435) | 8 | 10 Hz | Byte 1, Bits 7:6 | `1` / `2` | `"DAY"` / `"NIGHT"` | Moves with Byte 5 and the B2/B3 dimming pair |
-| **Motor coil temp** | `0x141` (321) | 8 | 2.4 Hz | Byte 2 | `raw - 40` | °C | r=0.999, MAE 0.22 °C vs OBD `Motor Coil Temp` (134 samples, 23→66 °C) |
-| **UTC wall clock** | `0x15E` (350) | 8 | 1 Hz | mux `0x01`: B1 h, B2 m, B3 s, B4 day, B5 month | binary | UTC | `0x084` carries the same time in local zone (+2 h CEST) |
+| **Motor coil temp** | `0x141` (321) | 8 | 2.4 Hz | Byte 2 | `raw - 40` | °C | Motor coil temperature |
+| **UTC wall clock** | `0x15E` (350) | 8 | 1 Hz | mux `0x01`: B1 h, B2 m, B3 s, B4 day, B5 month | binary | UTC | UTC wall clock broadcast |
 | **Hybrid battery SOC** | `0x108` (264) | 8 | ~1 Hz† | Byte 0 | `raw * 0.5` % | 75–84 % | Same 0.5 %/LSB as BECM UDS 0x0101 |
 | **Ambient air temp** | `0x142` (322) | 8 | ~1 Hz† | Byte 0 | `raw - 64` °C | ~14 °C | OBD Outside Temp |
 | **ICE running (HS3)** | `0x142` (322) | 8 | ~1 Hz† | Byte 2 | `0x64`=EV, `0x68`=ICE | EV vs ICE | Correlates with `0x103` RPM |

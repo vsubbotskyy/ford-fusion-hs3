@@ -69,7 +69,7 @@ Do not search this bus for the following signals—they reside on other vehicle 
    - SYNC screen menus, volume, media tracks, radio presets (reside on dedicated infotainment buses).
 3. **Discrete Transmission Gears**:
    - Park vs Not-Park is available (`0x107` / `0x10A`), but distinct Reverse vs Neutral gear position is not bridged onto this link.
-4. **Lighting Directional Nuances**:
-   - Turn signal side (Left / Right), stalk latches and bulb flash phase are all present on `0x1B3`, verified against GPS track heading.
+4. **Lighting Sub-modes**:
+   - High beam, low beam, and AUTO headlight distinctions are not reported separately on this tap (master lighting status only on `0x1B3`).
 5. **Raw Powertrain Diagnostic Polling**:
    - UDS physical request `0x7E0` (PCM) is filtered by the GWM and cannot be polled from the TCU harness.
