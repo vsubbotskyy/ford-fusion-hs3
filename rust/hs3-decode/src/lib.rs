@@ -33,6 +33,12 @@ pub struct BcmStatus {
     pub turn_left_active: bool,
     pub turn_right_active: bool,
     pub hazards_active: bool,
+    /// Both indicators lit with **neither** stalk latch set: the BCM's lock/unlock
+    /// confirmation flash. This is the observable acknowledgement of a door command
+    /// and fires ~0.3 s after `0x146` lock (`0C`) or unlock (`04`), and also on a
+    /// physical keyfob action with no `0x146` at all. Was exposed as `tcu_ack`
+    /// through 0.1.x; it is a BCM courtesy flash, not a TCU acknowledgement.
+    pub courtesy_flash: bool,
     pub flasher_bulb_on: bool,
     pub headlights_on: bool,
     pub front_fog_on: bool,
@@ -325,6 +331,8 @@ pub fn decode_tire_pressures(data: &[u8]) -> Option<[f32; 4]> {
 /// Turn signals (verified against GPS track heading over 16 turns, 0 contradictions):
 ///   LEFT  = B1 bit0 active latch; B1 bit1 and B6 bit6 flash in lockstep.
 ///   RIGHT = B7 bit6 active latch; B7 bit7 and B4 bit3 flash in lockstep.
+///   COURTESY FLASH = all four flash bits, neither latch - the BCM lock/unlock
+///     confirmation blink, and the observable ack for a door command.
 ///   HAZARD = both latches asserted. INFERRED, NOT OBSERVED: no frame in any
 ///     of the 24 captures has both latches set, so this branch is untested
 ///     against the vehicle. Capture a hazard-light session before relying on it.
@@ -352,6 +360,7 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
             turn_left_active: false,
             turn_right_active: false,
             hazards_active: false,
+            courtesy_flash: false,
             flasher_bulb_on: false,
             headlights_on: false,
             front_fog_on: false,
@@ -374,6 +383,9 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
     let left_bulb_on = (data[1] >> 1) & 0x01 != 0;
     let right_bulb_on = (data[7] >> 7) & 0x01 != 0;
     let flasher_bulb_on = left_bulb_on || right_bulb_on;
+    // Both bulbs lit without a stalk latch = lock/unlock courtesy flash.
+    // Gated on !hazards so a real hazard session can never read as a command ack.
+    let courtesy_flash = left_bulb_on && right_bulb_on && !hazards_active;
     let headlights_on = (data[1] >> 3) & 0x01 != 0;
     let front_fog_on = data[7] & 0x01 != 0;
     let rear_fog_on = (data[0] >> 1) & 0x01 != 0;
@@ -405,6 +417,7 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
         turn_left_active,
         turn_right_active,
         hazards_active,
+        courtesy_flash,
         flasher_bulb_on,
         headlights_on,
         front_fog_on,
@@ -922,6 +935,17 @@ mod tests {
         assert!(haz.hazards_active);
         assert_eq!(haz.turn_signal, Some("HAZARD"));
         assert_eq!(haz.ambient_light, 0x00);
+        assert!(!haz.courtesy_flash, "hazards must not read as a command ack");
+
+        // Courtesy flash, real capture from lock-A.csv at +0.30 s after 0x146 = 0C:
+        // 10 42 04 00 EE 05 40 80 - all four flash bits, neither latch.
+        let ack = decode_bcm_status(&[0x10, 0x42, 0x04, 0x00, 0xEE, 0x05, 0x40, 0x80]).unwrap();
+        assert!(ack.courtesy_flash);
+        assert!(!ack.turn_left_active && !ack.turn_right_active);
+        assert_eq!(ack.turn_signal, Some("OFF"));
+
+        // A plain left turn must not look like a courtesy flash.
+        assert!(!left.courtesy_flash);
 
         let front = decode_bcm_status(&[0x44, 0x48, 0x14, 0x11, 0x10, 0x05, 0x00, 0x03]).unwrap();
         assert!(front.front_fog_on);

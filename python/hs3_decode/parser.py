@@ -308,7 +308,12 @@ def parse_frame(cid: int, d: list[int]) -> dict:
                 else "OFF"
             )
             out["turn_signal_active"] = left or right
-            out["flasher_bulb_on"] = bool((d[1] >> 1) & 1) or bool((d[7] >> 7) & 1)
+            left_bulb = bool((d[1] >> 1) & 1)
+            right_bulb = bool((d[7] >> 7) & 1)
+            out["flasher_bulb_on"] = left_bulb or right_bulb
+            # Both bulbs lit with neither latch = BCM lock/unlock courtesy flash,
+            # the observable ack for a door command (~0.3 s after 0x146 0C / 04).
+            out["courtesy_flash"] = left_bulb and right_bulb and not (left and right)
             out["front_fog"] = bool(d[7] & 1)
             out["hood_ajar"] = bool((d[7] >> 3) & 1)
             out["door_ajar_fl"] = bool((d[7] >> 5) & 1)

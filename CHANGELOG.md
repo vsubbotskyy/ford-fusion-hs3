@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0 — 2026-09-20
+
+Restores a signal 0.2.0 removed on a wrong reading.
+
+### Added
+- `BcmStatus::courtesy_flash` — both indicators lit with **neither** stalk latch set.
+  This is the BCM's lock/unlock confirmation blink and the observable ack for a door
+  command: it fires ~0.3 s after `0x146` lock (`0C`) or unlock (`04`), and also on a
+  physical keyfob action with no `0x146` at all (`lock-keyfob.csv`, t=61.7). Example
+  frame from `lock-A.csv`: `10 42 04 00 EE 05 40 80` — all four flash bits set, both
+  latches clear. Gated on `!hazards_active` so a hazard session can never be read as
+  a command ack.
+
+### Fixed
+- 0.2.0 removed `tcu_ack` on the grounds that `B1 bit1 && B4 bit3` was "really
+  hazards". That was wrong. Those are the two *bulb* bits, and they co-assert during
+  the courtesy flash while both *latches* stay clear — hazards would set the latches.
+  The signal is real and was load-bearing for command acknowledgement; it is back
+  under an accurate name. `tcu_ack` itself stays gone: it was never a TCU ack.
+
 ## 0.2.0 — 2026-09-20
 
 Breaking. Corrects two signals on `0x1B3` that were mislabelled, and adds three.

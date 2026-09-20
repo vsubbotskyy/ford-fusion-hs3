@@ -321,7 +321,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _f("bit0 LEFT turn latch; bit1 left bulb flash; bit3 headlights; bits7-6 day(1)/night(2)"),
         _s("interior dimming; day/night dependent (84/08 dark, 14/04 + 11 daylight)"),
         _s("interior dimming level; pairs with B2"),
-        _f("bit3 RIGHT turn cluster echo (lockstep with B7 bit7)"),
+        _f("bit3 RIGHT turn cluster echo (lockstep with B7 bit7); with B1 bit1 = lock/unlock courtesy flash"),
         _s("ambient twilight level: 00 dark / 01 dawn-dusk / 05 daylight (NOT TCU presence)"),
         _f("bit0 RL ajar; bit1 RR ajar; bit6 LEFT turn cluster echo (lockstep with B1 bit1)"),
         _f("bit0 front fog; bit3 hood ajar; bit4 FR ajar; bit5 FL ajar; bit6 RIGHT turn latch; bit7 right bulb flash"),

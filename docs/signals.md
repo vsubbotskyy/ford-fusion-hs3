@@ -25,6 +25,7 @@ Door, lamp, and lock bits were isolated with single-action labelled captures (on
 | Turn LEFT | B1 bit 0 latch; B1 bit 1 + B6 bit 6 flash | `turn_left` | GPS heading, 2026-09-20 |
 | Turn RIGHT | B7 bit 6 latch; B7 bit 7 + B4 bit 3 flash | `turn_right` | GPS heading, 2026-09-20 |
 | Ambient light | B5 | `ambient_light` | `00` dark / `01` dawn / `05` day |
+| Courtesy flash | B1 bit 1 + B7 bit 7 (all four flash bits), no latch | `courtesy_flash` | lock/unlock ack, +0.3 s after `0x146` |
 | Day / night | B1 bits 7:6 | `day_night` | `1` day, `2` night |
 
 Windows and sunroof: no bits toggle on this tap. Do not invent UI from HS-CAN4.
