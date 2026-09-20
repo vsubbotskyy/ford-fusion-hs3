@@ -70,6 +70,6 @@ Do not search this bus for the following signals—they reside on other vehicle 
 3. **Discrete Transmission Gears**:
    - Park vs Not-Park is available (`0x107` / `0x10A`), but distinct Reverse vs Neutral gear position is not bridged onto this link.
 4. **Lighting Directional Nuances**:
-   - Turn signal stalk activation and flasher bulb phase are present on `0x1B3`, but Left vs Right turn side is not available on this bus.
+   - Turn signal side (Left / Right), stalk latches and bulb flash phase are all present on `0x1B3`, verified against GPS track heading.
 5. **Raw Powertrain Diagnostic Polling**:
    - UDS physical request `0x7E0` (PCM) is filtered by the GWM and cannot be polled from the TCU harness.

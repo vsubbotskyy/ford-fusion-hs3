@@ -216,6 +216,10 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         elif d[0] == 0xC0:
             out["vin_alt_mux"] = True
     elif cid == 0x141 and len(d) >= 3:
+        # B2 = Motor Coil Temperature, raw - 40 degC.
+        # r=0.999, MAE 0.22 degC vs OBD "Motor Coil Temp" (134 samples, 23-66 degC).
+        if d[2] >= 40:
+            out["motor_coil_c"] = d[2] - 40
         raw = be16(d, 1)
         if 8000 <= raw <= 12000:
             out["map_kpa"] = raw * 0.01
@@ -254,8 +258,12 @@ def parse_frame(cid: int, d: list[int]) -> dict:
     elif cid == 0x15E:
         mux = d[0]
         out["mux"] = mux
-        if mux == 0x01 and len(d) >= 4 and d[2] <= 59 and d[3] <= 59:
-            out["clock"] = f"--:{d[2]:02d}:{d[3]:02d}"
+        if mux == 0x01 and len(d) >= 6 and d[1] <= 23 and d[2] <= 59 and d[3] <= 59:
+            # UTC wall clock at 1 Hz. 0x084 carries the same time in local zone.
+            out["clock_utc"] = f"{d[1]:02d}:{d[2]:02d}:{d[3]:02d}"
+            out["clock"] = out["clock_utc"]
+            if 1 <= d[5] <= 12 and 1 <= d[4] <= 31:
+                out["date_utc"] = f"{d[4]:02d}-{d[5]:02d}"
         elif mux in (0x16, 0x76, 0x86) and len(d) >= 7:
             lat_fine = (d[3] - 128) * 1e-6 if len(d) >= 4 else 0.0
             lat = 43.6591 + be16(d, 1) * 0.000256034 + lat_fine
@@ -276,7 +284,31 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         out["rear_fog"] = bool((d[0] >> 1) & 1)
         if len(d) >= 2:
             out["headlights"] = bool(d[1] & 0x08)
+            day_night = (d[1] >> 6) & 0x03
+            if day_night in (1, 2):
+                out["day_night"] = "DAY" if day_night == 1 else "NIGHT"
+        if len(d) >= 6:
+            # B5 is ambient twilight level, NOT TCU presence:
+            # 0x00 dark / 0x01 dawn-dusk / 0x05 daylight.
+            out["ambient_light"] = d[5]
         if len(d) >= 8:
+            # Turn signals, verified against GPS heading over 16 turns:
+            # LEFT  = B1 bit0 latch, B1 bit1 + B6 bit6 flash in lockstep.
+            # RIGHT = B7 bit6 latch, B7 bit7 + B4 bit3 flash in lockstep.
+            # HAZARD (both latches) is inferred - never seen in any capture.
+            left = bool(d[1] & 0x01)
+            right = bool((d[7] >> 6) & 0x01)
+            out["turn_left"] = left
+            out["turn_right"] = right
+            out["hazards"] = left and right
+            out["turn_signal"] = (
+                "HAZARD" if left and right
+                else "LEFT" if left
+                else "RIGHT" if right
+                else "OFF"
+            )
+            out["turn_signal_active"] = left or right
+            out["flasher_bulb_on"] = bool((d[1] >> 1) & 1) or bool((d[7] >> 7) & 1)
             out["front_fog"] = bool(d[7] & 1)
             out["hood_ajar"] = bool((d[7] >> 3) & 1)
             out["door_ajar_fl"] = bool((d[7] >> 5) & 1)

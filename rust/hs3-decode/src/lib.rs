@@ -28,8 +28,11 @@ fn round_f64(val: f64) -> f64 {
 pub struct BcmStatus {
     pub doors_locked: bool,
     pub vehicle_in_motion: bool,
-    pub turn_signal: Option<&'static str>, // "OFF" or "ON" — side is not on 0x1B3
+    pub turn_signal: Option<&'static str>, // "OFF" | "LEFT" | "RIGHT" | "HAZARD"
     pub turn_signal_active: bool,
+    pub turn_left_active: bool,
+    pub turn_right_active: bool,
+    pub hazards_active: bool,
     pub flasher_bulb_on: bool,
     pub headlights_on: bool,
     pub front_fog_on: bool,
@@ -40,8 +43,11 @@ pub struct BcmStatus {
     pub door_ajar_rr: bool,
     pub trunk_ajar: bool,
     pub hood_ajar: bool,
-    pub tcu_ack: bool,
-    pub tcu_presence: u8,
+    /// Ambient twilight level from B5. `0x00` dark, `0x01` dawn/dusk, `0x05` daylight.
+    /// Formerly (incorrectly) exposed as `tcu_presence`.
+    pub ambient_light: u8,
+    /// B1 bits[7:6]: `1` = day, `2` = night.
+    pub day_night: Option<&'static str>,
 }
 
 /// 0x107 Bytes 0-1 (Big-Endian, 0.01 km/h / LSB) — Verified r=0.99995
@@ -314,7 +320,18 @@ pub fn decode_tire_pressures(data: &[u8]) -> Option<[f32; 4]> {
     }
 }
 
-/// 0x1B3 BCM Broadcast: locks, lighting, door ajar, TCU presence.
+/// 0x1B3 BCM Broadcast: locks, lighting, door ajar, turn signals, ambient light.
+///
+/// Turn signals (verified against GPS track heading over 16 turns, 0 contradictions):
+///   LEFT  = B1 bit0 active latch; B1 bit1 and B6 bit6 flash in lockstep.
+///   RIGHT = B7 bit6 active latch; B7 bit7 and B4 bit3 flash in lockstep.
+///   HAZARD = both latches asserted. INFERRED, NOT OBSERVED: no frame in any
+///     of the 24 captures has both latches set, so this branch is untested
+///     against the vehicle. Capture a hazard-light session before relying on it.
+/// Ambient light (B5) is NOT TCU presence: it tracks time of day (00 dark /
+/// 01 dawn / 05 daylight), stepping 00->01 at vehicle clock 07:05:25 on the
+/// 2026-09-09 dawn drive. The old label was an artefact of every TCU-unplugged
+/// capture happening after dark. B1 bits[7:6] carry day/night state.
 /// Front fog = B7 bit0. Rear fog = B0 bit1 (only latches with front fog).
 /// Door ajar (user-confirmed; matches Ford DrStatRl/Rr on BodyInfo_3):
 /// FL = B7 bit5, FR = B7 bit4, RL = B6 bit0, RR = B6 bit1.
@@ -332,6 +349,9 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
             vehicle_in_motion,
             turn_signal: None,
             turn_signal_active: false,
+            turn_left_active: false,
+            turn_right_active: false,
+            hazards_active: false,
             flasher_bulb_on: false,
             headlights_on: false,
             front_fog_on: false,
@@ -342,13 +362,18 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
             door_ajar_rr: false,
             trunk_ajar: false,
             hood_ajar: false,
-            tcu_ack: false,
-            tcu_presence: 0xFF,
+            ambient_light: 0xFF,
+            day_night: None,
         });
     }
 
-    let ts_active = data[1] & 0x01 != 0;
-    let flasher_bulb_on = (data[1] >> 1) & 0x01 != 0;
+    let turn_left_active = data[1] & 0x01 != 0;
+    let turn_right_active = (data[7] >> 6) & 0x01 != 0;
+    let hazards_active = turn_left_active && turn_right_active;
+    let ts_active = turn_left_active || turn_right_active;
+    let left_bulb_on = (data[1] >> 1) & 0x01 != 0;
+    let right_bulb_on = (data[7] >> 7) & 0x01 != 0;
+    let flasher_bulb_on = left_bulb_on || right_bulb_on;
     let headlights_on = (data[1] >> 3) & 0x01 != 0;
     let front_fog_on = data[7] & 0x01 != 0;
     let rear_fog_on = (data[0] >> 1) & 0x01 != 0;
@@ -358,17 +383,28 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
     let door_ajar_rr = (data[6] >> 1) & 0x01 != 0;
     let trunk_ajar = data[0] & 0x01 != 0;
     let hood_ajar = (data[7] >> 3) & 0x01 != 0;
-    let tcu_ack = (data[1] & 0x02 != 0) && (data[4] & 0x08 != 0);
-    let tcu_presence = data[5];
+    let ambient_light = data[5];
+    let day_night = match (data[1] >> 6) & 0x03 {
+        1 => Some("DAY"),
+        2 => Some("NIGHT"),
+        _ => None,
+    };
 
-    // B6 bit 6 toggles with B1 bit 1 (bulb phase), not left vs right.
-    let turn_signal = if ts_active { Some("ON") } else { Some("OFF") };
+    let turn_signal = Some(match (turn_left_active, turn_right_active) {
+        (true, true) => "HAZARD",
+        (true, false) => "LEFT",
+        (false, true) => "RIGHT",
+        (false, false) => "OFF",
+    });
 
     Some(BcmStatus {
         doors_locked,
         vehicle_in_motion,
         turn_signal,
         turn_signal_active: ts_active,
+        turn_left_active,
+        turn_right_active,
+        hazards_active,
         flasher_bulb_on,
         headlights_on,
         front_fog_on,
@@ -379,8 +415,8 @@ pub fn decode_bcm_status(data: &[u8]) -> Option<BcmStatus> {
         door_ajar_rr,
         trunk_ajar,
         hood_ajar,
-        tcu_ack,
-        tcu_presence,
+        ambient_light,
+        day_night,
     })
 }
 
@@ -527,6 +563,23 @@ pub fn decode_transaxle_park(data: &[u8]) -> Option<bool> {
         0x08 | 0x09 => Some(false),
         _ => None,
     }
+}
+
+/// 0x141 Byte 2: Motor Coil Temperature, `raw - 40` °C.
+///
+/// Verified against the paired Car Scanner OBD PID `Motor Coil Temp` on the
+/// 2026-09-10 drive: r = 0.999, MAE 0.22 °C, bias +0.04 °C over 134 samples
+/// spanning a 23 → 66 °C warm-up. (Not to be confused with `0x10C` B6, which
+/// is still unidentified — see `decode_motor_temp`.)
+pub fn decode_motor_coil_temp(data: &[u8]) -> Option<f32> {
+    if data.len() < 3 {
+        return None;
+    }
+    let raw = data[2];
+    if raw < 40 {
+        return None;
+    }
+    Some(raw as f32 - 40.0)
 }
 
 /// 0x10E Byte 7: 0x00 only while speed is 0 (parked / not in active drive).
@@ -690,13 +743,17 @@ pub fn decode_0x112_initialised(data: &[u8]) -> Option<bool> {
 }
 
 /// 0x15E multiplexed gateway bridge.
-/// mux 0x01 B2/B3 = clock minutes/seconds (ρ=0.995 vs 0x084).
+/// mux 0x01 = UTC wall clock at 1 Hz: B1 hour, B2 minute, B3 second,
+///   B4 day-of-month, B5 month. B6 is a constant descriptor (0x0C), B7 pad.
+///   Verified against `0x084` (the local display clock): mux01 reads 10:19:34
+///   on 11 Sept while 0x084 reads 12:19:31 — a clean +2 h CEST offset.
 /// mux 0x16 / 0x76 / 0x86 = GPS: B1:B2 latitude, B5:B6 longitude.
 ///   lat = 43.6591 + raw16 * 0.000256034 + (B3-128)*1e-6
 ///   lon = 5.0 + raw16 * 0.000016          (R²=1.000, MAE 2.5 m)
 #[derive(Debug, Clone, PartialEq)]
 pub enum GatewayMux {
-    Clock { minute: u8, second: u8 },
+    /// UTC wall clock. `0x084` carries the same time in local zone.
+    Clock { hour: u8, minute: u8, second: u8, day: u8, month: u8 },
     Gps { lat: f64, lon: f64 },
 }
 
@@ -709,10 +766,16 @@ pub fn decode_gateway_mux(data: &[u8]) -> Option<GatewayMux> {
             if data.len() < 4 {
                 return None;
             }
+            if data.len() < 6 {
+                return None;
+            }
+            let hour = data[1];
             let minute = data[2];
             let second = data[3];
-            if minute <= 59 && second <= 59 {
-                Some(GatewayMux::Clock { minute, second })
+            let day = data[4];
+            let month = data[5];
+            if hour <= 23 && minute <= 59 && second <= 59 {
+                Some(GatewayMux::Clock { hour, minute, second, day, month })
             } else {
                 None
             }
@@ -835,12 +898,30 @@ mod tests {
         assert!(!status.door_ajar_rr);
         assert!(!status.trunk_ajar);
         assert!(!status.hood_ajar);
-        assert_eq!(status.tcu_presence, 0x05);
+        assert_eq!(status.ambient_light, 0x05);
+        assert_eq!(status.day_night, Some("DAY"));
 
-        let ts_status = decode_bcm_status(&[0x40, 0x4B, 0x04, 0x11, 0x10, 0x05, 0x40, 0x02]).unwrap();
-        assert!(ts_status.turn_signal_active);
-        assert!(ts_status.flasher_bulb_on);
-        assert_eq!(ts_status.turn_signal, Some("ON"));
+        // LEFT: B1 bit0 latch + B1 bit1 bulb, echoed by B6 bit6.
+        let left = decode_bcm_status(&[0x40, 0x4B, 0x04, 0x11, 0x10, 0x05, 0x40, 0x02]).unwrap();
+        assert!(left.turn_signal_active);
+        assert!(left.turn_left_active && !left.turn_right_active);
+        assert!(left.flasher_bulb_on);
+        assert!(!left.hazards_active);
+        assert_eq!(left.turn_signal, Some("LEFT"));
+
+        // RIGHT: B7 bit6 latch + B7 bit7 bulb, echoed by B4 bit3.
+        let right = decode_bcm_status(&[0x40, 0x48, 0x04, 0x11, 0x18, 0x05, 0x00, 0xC2]).unwrap();
+        assert!(right.turn_signal_active);
+        assert!(right.turn_right_active && !right.turn_left_active);
+        assert!(right.flasher_bulb_on);
+        assert_eq!(right.turn_signal, Some("RIGHT"));
+
+        // HAZARD: both latches asserted. Synthetic frame - hazards were never
+        // captured on the vehicle, so this only pins the decode logic.
+        let haz = decode_bcm_status(&[0x40, 0x4B, 0x04, 0x11, 0x18, 0x00, 0x40, 0xC2]).unwrap();
+        assert!(haz.hazards_active);
+        assert_eq!(haz.turn_signal, Some("HAZARD"));
+        assert_eq!(haz.ambient_light, 0x00);
 
         let front = decode_bcm_status(&[0x44, 0x48, 0x14, 0x11, 0x10, 0x05, 0x00, 0x03]).unwrap();
         assert!(front.front_fog_on);
@@ -997,11 +1078,15 @@ mod tests {
 
     #[test]
     fn test_gateway_clock() {
+        // Real capture: 01 0A 13 22 0B 09 0C 00 -> 10:19:34 UTC, 11 September.
         assert_eq!(
-            decode_gateway_mux(&[0x01, 0x04, 0x27, 0x1B, 0, 0, 0, 0]),
+            decode_gateway_mux(&[0x01, 0x0A, 0x13, 0x22, 0x0B, 0x09, 0x0C, 0x00]),
             Some(GatewayMux::Clock {
-                minute: 0x27,
-                second: 0x1B
+                hour: 10,
+                minute: 19,
+                second: 34,
+                day: 11,
+                month: 9
             })
         );
         assert_eq!(
