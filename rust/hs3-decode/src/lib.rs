@@ -75,6 +75,7 @@ pub fn decode_gear_position(data: &[u8]) -> Option<&'static str> {
 /// - >0xE000: ICE Running, RPM = (raw - 0xE000) * 2.0 (idle ~1250-1300 RPM)
 /// - ==0xE000: EV Mode Active, ICE stopped, RPM = 0.0
 /// - <0xE000: Standby / unpowered, RPM = 0.0
+///
 /// Returns: (rpm, is_running, ev_mode_active)
 pub fn decode_engine_status(data: &[u8]) -> Option<(f32, bool, bool)> {
     if data.len() < 4 { return None; }
@@ -101,6 +102,7 @@ pub fn decode_brake_pressed(data: &[u8]) -> Option<bool> {
 /// - Byte 0 Bits 1:0 = High bits 9:8
 /// - Byte 1 = Low bits 7:0
 /// - When uninitialized / sleeping: Byte 0 is 0x9F and Byte 1 is 0xFF (ignored)
+///
 /// Scaled as percentage (0.0% to 100.0%): raw / 10.23
 pub fn decode_brake_pedal_pct(data: &[u8]) -> Option<f32> {
     if data.len() < 2 { return None; }
@@ -148,6 +150,7 @@ pub fn decode_106_raw12(data: &[u8]) -> Option<u16> {
 /// 0x103 Bytes 0-1 (Driver Propulsion Demand Torque / Accelerator Pedal Demand)
 /// - Baseline / Coasting / Stopped: 0x8000
 /// - Accelerating: > 0x8000 (up to ~530 counts above baseline)
+///
 /// Returns estimated driver pedal demand % (0.0% to 100.0%)
 pub fn decode_pedal_position(data: &[u8]) -> Option<f32> {
     if data.len() < 2 { return None; }
@@ -179,7 +182,7 @@ pub fn decode_coolant_temp(data: &[u8]) -> Option<f32> {
 pub fn decode_odometer(data: &[u8]) -> Option<f64> {
     if data.len() < 3 { return None; }
     let raw = ((data[0] as u32) << 16) | ((data[1] as u32) << 8) | (data[2] as u32);
-    if raw >= 50_000 && raw <= 2_000_000 {
+    if (50_000..=2_000_000).contains(&raw) {
         Some(raw as f64)
     } else {
         None
@@ -647,7 +650,7 @@ pub fn decode_hybrid_mode(data: &[u8]) -> Option<&'static str> {
 }
 
 /// US gallons/mile → L/100 km: 235.214583 / mpg.
-const US_MPG_TO_L100KM: f32 = 235.214_583;
+const US_MPG_TO_L100KM: f32 = 235.214_58;
 
 fn trip_avg_mpg_raw(data: &[u8]) -> Option<f32> {
     if data.len() < 6 {
@@ -726,7 +729,7 @@ pub fn decode_motor_angle(data: &[u8]) -> Option<f32> {
 /// Bytes 4-5 are a 16-bit counter block that resets to exactly 1000 (0x03E8) at the
 /// start of each drive leg and then drifts in the 900-1000 band; byte 7 resets to 0
 /// and climbs monotonically. Reading byte 4 alone only answers "is that 16-bit value
-/// >= 768", i.e. "has this counter block been initialised" — which latches on ~2-3 min
+/// \>= 768", i.e. "has this counter block been initialised" — which latches on ~2-3 min
 /// into a drive and never drops through stops.
 ///
 /// Evidence it is not motion (drive_home 09-11): byte4=0x00 occurs at speeds up to
