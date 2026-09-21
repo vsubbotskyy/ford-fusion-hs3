@@ -450,12 +450,12 @@ MUX_MAP: dict[int, dict[int, list[tuple[str, str]]]] = {
         ],
         0x01: [
             _s("mux index"),
-            _f("clock companion 04/05"),
+            _f("clock hour 0-23 (UTC)"),
             _s("clock minute 0-59"),
             _s("clock second 0-59"),
-            _c(0x09, "clock mux const"),
-            _c(0x09, "clock mux const"),
-            _c(0x0C, "clock mux const"),
+            _s("clock day of month 1-31 (UTC)"),
+            _s("clock month 1-12"),
+            _c(0x0C, "clock const 0C"),
             _pad(0),
         ],
         0x10: [

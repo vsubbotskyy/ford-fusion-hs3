@@ -86,9 +86,9 @@ BO_ 272 Msg_0x110: 8 Gateway
  SG_ Motor_Angle : 15|16@0+ (0.005493164,0) [0|359.995] "deg" Vector__XXX
  SG_ Motor_Angle_Valid : 24|1@0+ (1,0) [0|1] "" Vector__XXX
 
-BO_ 274 Msg_0x112: 8 TCU
- SG_ TCU_Motion : 39|8@0+ (1,0) [0|255] "" Vector__XXX
- SG_ TCU_Motion_Analog : 47|8@0+ (1,0) [0|232] "" Vector__XXX
+BO_ 274 Msg_0x112: 8 Vector__XXX
+ SG_ Ctr_112_Init : 39|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Ctr_112_B5 : 47|8@0+ (1,0) [0|232] "" Vector__XXX
  SG_ TCU_SlowCount : 63|8@0+ (1,0) [0|255] "" Vector__XXX
 
 BO_ 275 Msg_0x113: 8 Gateway
@@ -149,7 +149,7 @@ BO_ 435 Msg_0x1B3: 8 BCM
  SG_ Vehicle_In_Motion : 6|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Door_Ajar_RL : 48|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Door_Ajar_RR : 49|1@0+ (1,0) [0|1] "" Vector__XXX
- SG_ TCU_Presence : 47|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Ambient_Light : 47|8@0+ (1,0) [0|255] "" Vector__XXX
  SG_ Front_Fog : 56|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Hood_Ajar : 59|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Door_Ajar_FR : 60|1@0+ (1,0) [0|1] "" Vector__XXX
@@ -180,3 +180,5 @@ CM_ SG_ 372 Fuel_Gauge_Update "B3 bit 7. NOT the low-fuel lamp. 1-5 s strobe at 
 CM_ SG_ 322 ICE_Running "0x64 = EV, 0x68 = ICE running.";
 CM_ SG_ 261 Hybrid_Mode "0xE0 parked, 0xE8 city/EV-heavy, 0xF8 highway.";
 CM_ SG_ 339 Trip_Avg_Mpg "Native 0.1 US mpg/LSB. Metric conversion: L/100 km = 235.215 / mpg.";
+CM_ SG_ 274 Ctr_112_Init "B4 00 = counter block not initialised, 03 = initialised (B4:B5 >= 768). Latches 2-3 min into a drive. NOT motion. Formerly TCU_Motion.";
+CM_ SG_ 435 Ambient_Light "BCM twilight level: 00 dark, 01 dawn/dusk, 05 daylight. Formerly mislabelled TCU_Presence. Reads 00 in the wake/sleep boundary frame (B1=00) - ignore it there.";

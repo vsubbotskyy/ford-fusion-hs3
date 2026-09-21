@@ -196,11 +196,15 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         if valid and not (d[0] == 0xFF and d[1] == 0xFF and d[2] == 0xFF):
             out["motor_angle_deg"] = round(((d[1] << 8) | d[2]) * 360 / 65536, 1)
     elif cid == 0x112 and len(d) >= 5:
-        out["tcu_motion"] = {0x00: False, 0x03: True}.get(d[4])
+        # B4 counter block initialised (00 no / 03 yes) - NOT motion.
+        out["ctr_112_init"] = {0x00: False, 0x03: True}.get(d[4])
+        out["tcu_motion"] = out["ctr_112_init"]  # deprecated alias, remove in 0.5
         if len(d) >= 6:
-            out["tcu_motion_analog"] = d[5]
+            out["ctr_112_b5"] = d[5]
+            out["tcu_motion_analog"] = d[5]  # deprecated alias, remove in 0.5
         if len(d) >= 8:
-            out["tcu_tick"] = d[7]
+            out["ctr_112_b7"] = d[7]
+            out["tcu_tick"] = d[7]  # deprecated alias, remove in 0.5
     elif cid == 0x113 and len(d) >= 6:
         out["trip_km"] = be16(d, 4) * 0.1
         if len(d) >= 2:
