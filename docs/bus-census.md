@@ -64,6 +64,7 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **ICE running (HS3)** | `0x142` (322) | 8 | ~1 Hz† | Byte 2 | `0x64`=EV, `0x68`=ICE | EV vs ICE | Correlates with `0x103` RPM |
 | **Gateway GPS lat** | `0x15E` mux `0x16/76/86` | 8 | ~1 Hz | Bytes 1–2 BE + B3 fine | `43.6591 + raw * 0.000256034 + (B3-128)*1e-6` | Regional coordinate | GPS R²=1.000; B3 fine MAE 6.0 m |
 | **Gateway GPS lon** | `0x15E` mux `0x16/76/86` | 8 | ~1 Hz | Bytes 5–6 BE | `5.0 + raw * 0.000016` | Regional coordinate | GPS R²=1.000, MAE 2.5 m |
+| **Gateway GNSS DOP** | `0x15E` mux `0x30` | 8 | ~1 Hz | B2 PDOP, B3 HDOP, B4 VDOP | `raw * 0.1` | Dilution of Precision | $PDOP^2 \approx HDOP^2 + VDOP^2$; 0/FF invalid; empirical scale 0.1 |
 | **This-trip fuel used** | `0x113` (275) | 8 | ~1 Hz† | Byte 1 | `raw * 0.1` L | 0–7.4 L (8-bit max 25.5) | OBD Fuel used MAE 0.056 L, $r=0.999$ |
 | **Longitudinal accel** | `0x106` (262) | 8 | ~1.8 kHz | B4 bits1-0 + B5 | `raw * 0.035 − 17.9` m/s² | Ford 10-bit | vs OBD GPS accel $r=0.85$, MAE 0.017 g |
 | **Gateway clock MM:SS** | `0x15E` mux `0x01` | 8 | ~1 Hz | B2=min, B3=sec | 0–59 | matches `0x084` | $\rho=0.995$ vs vehicle clock |

@@ -127,12 +127,16 @@ BO_ 339 Msg_0x153: 8 Gateway
  SG_ Trip_Avg_Mpg : 39|16@0+ (0.1,0) [0|400] "mpg" Vector__XXX
 
 BO_ 350 Msg_0x15E: 8 Gateway
- SG_ Mux_Index : 7|8@0+ (1,0) [0|255] "" Vector__XXX
- SG_ Gps_Lat_Raw : 15|16@0+ (0.000256034,43.6591) [40|60] "deg" Vector__XXX
- SG_ Gps_Lat_Fine : 31|8@0+ (1e-6,-0.000128) [-0.000128|0.000127] "deg" Vector__XXX
- SG_ Gps_Lon_Raw : 47|16@0+ (0.000016,5.0) [5|6.05] "deg" Vector__XXX
- SG_ Clock_Minute_Mux : 23|8@0+ (1,0) [0|59] "min" Vector__XXX
- SG_ Clock_Second_Mux : 31|8@0+ (1,0) [0|59] "s" Vector__XXX
+ SG_ Mux_Index M : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Clock_Minute_Mux m1 : 23|8@0+ (1,0) [0|59] "min" Vector__XXX
+ SG_ Clock_Second_Mux m1 : 31|8@0+ (1,0) [0|59] "s" Vector__XXX
+ SG_ Gps_Lat_Raw m22 : 15|16@0+ (0.000256034,43.6591) [40|60] "deg" Vector__XXX
+ SG_ Gps_Lat_Fine m22 : 31|8@0+ (1e-6,-0.000128) [-0.000128|0.000127] "deg" Vector__XXX
+ SG_ Gps_Lon_Raw m22 : 47|16@0+ (0.000016,5.0) [5|6.05] "deg" Vector__XXX
+ SG_ Gnss_Distance_Raw m48 : 15|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Gnss_PDOP m48 : 23|8@0+ (0.1,0) [0|25.4] "" Vector__XXX
+ SG_ Gnss_HDOP m48 : 31|8@0+ (0.1,0) [0|25.4] "" Vector__XXX
+ SG_ Gnss_VDOP m48 : 39|8@0+ (0.1,0) [0|25.4] "" Vector__XXX
 
 BO_ 372 Msg_0x174: 8 Gateway
  SG_ Fuel_Level : 15|16@0+ (0.1,0) [0|100] "%" Vector__XXX
@@ -170,7 +174,7 @@ BO_ 1424 Msg_0x590: 8 TCU
 BO_ 1438 Msg_0x59E: 8 Gateway
  SG_ GWM_NM : 7|8@0+ (1,0) [0|255] "" Vector__XXX
 
-CM_ BO_ 350 "Mux 0x16/0x76/0x86 = GPS (B1:B2 lat, B5:B6 lon, regional origin). Mux 0x01 = MM:SS clock.";
+CM_ BO_ 350 "Mux 0x16/0x76/0x86 = GPS (B1:B2 lat, B5:B6 lon). Mux 0x01 = MM:SS clock. Mux 0x30 = GNSS DOP precision (B2 PDOP, B3 HDOP, B4 VDOP, scale 0.1, 00/FF invalid).";
 CM_ SG_ 268 Motor_Temp "NOT motor temp. Live 64-77 / off 0. Retracted — see docs/signals.md.";
 CM_ SG_ 321 High_Res_Empower_Gauge "16-bit analog cluster gauge. 10000 = 0 kW. < 10000 is regen, > 10000 is power. Was previously misidentified as Coarse HV Current (B0) + Intake MAP (B1:B2) due to byte misalignment.";
 CM_ SG_ 272 Motor_Angle "B1:B2 * 360/65536 deg. B3 bit7 resolver-valid. FF FF FF asleep.";
