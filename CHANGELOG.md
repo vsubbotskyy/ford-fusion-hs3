@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-09-22
+
+### Added
+- DBC & Byte Map: `0x15E` multiplexer `0x30` GNSS DOP precision signals (`Gnss_PDOP`, `Gnss_HDOP`, `Gnss_VDOP` with scale 0.1) and raw distance pulse counter (`Gnss_Distance_Raw`).
+- Master Census: documented Gateway GNSS DOP in `docs/bus-census.md`.
 
 ### Changed
+- DBC: fixed multiplexing declarations on message `0x15E` (`Mux_Index M`, `m1` for clock, `m22` for GPS, `m48` for GNSS DOP).
 - Python parser `0x112`: new keys `ctr_112_init`, `ctr_112_b5`, `ctr_112_b7`. The old
   `tcu_motion`, `tcu_motion_analog`, `tcu_tick` keys are kept as deprecated aliases (removal in 0.5).
   The frame is a vehicle counter block; the B4 flag latches ~2-3 min into a drive and is not motion.

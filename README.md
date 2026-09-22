@@ -100,8 +100,8 @@ print(decoded["speed_kmh"])  # 55.0 km/h
 The crates are `#![no_std]` with no crates.io dependencies of their own. Package names are `ford-fusion-hs3-decode` / `ford-fusion-hs3-tcu`; Rust still `use`s `hs3_decode` / `hs3_tcu`.
 
 ```toml
-ford-fusion-hs3-decode = "0.3.0"
-ford-fusion-hs3-tcu    = "0.3.0"
+ford-fusion-hs3-decode = "0.4.0"
+ford-fusion-hs3-tcu    = "0.4.0"
 ```
 
 Decode-only users can omit `ford-fusion-hs3-tcu`.
