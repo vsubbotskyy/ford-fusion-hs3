@@ -29,6 +29,7 @@ BO_ 256 Msg_0x100: 8 BCM
 
 BO_ 257 Msg_0x101: 8 Gateway
  SG_ Brake_Pressed : 32|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Gear_Selector : 29|2@0+ (1,0) [0|3] "" Vector__XXX
 
 BO_ 259 Msg_0x103: 8 Gateway
  SG_ Accelerator_Demand : 7|16@0+ (0.1887,-24188) [0|100] "%" Vector__XXX
@@ -44,6 +45,10 @@ BO_ 260 Msg_0x104: 8 Gateway
 
 BO_ 261 Msg_0x105: 8 Gateway
  SG_ Hybrid_Mode : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Restraints_Valid : 15|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Driver_Belt : 14|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ Passenger_Belt : 12|2@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ Passenger_Occupied : 23|2@0+ (1,0) [0|3] "" Vector__XXX
  SG_ Hybrid_Strategy : 55|8@0+ (1,0) [0|255] "" Vector__XXX
 
 BO_ 262 Msg_0x106: 8 Gateway
@@ -190,5 +195,13 @@ CM_ SG_ 339 Trip_Avg_Mpg "Native 0.1 US mpg/LSB. Metric conversion: L/100 km = 2
 CM_ SG_ 274 Ctr_112_Init "B4 00 = counter block not initialised, 03 = initialised (B4:B5 >= 768). Latches 2-3 min into a drive. NOT motion. Formerly TCU_Motion.";
 CM_ SG_ 435 Ambient_Light "BCM twilight level: 00 dark, 01 dawn/dusk, 05 daylight. Formerly mislabelled TCU_Presence. Reads 00 in the wake/sleep boundary frame (B1=00) - ignore it there.";
 CM_ SG_ 327 Lamp_Mode "Exterior lamp mode, B5 bits 7:5. DRLs switch off on the indicating side (3/4). Parking (2) is tentative.";
+CM_ SG_ 257 Gear_Selector "Rotary gear dial, B3 bits 5:4. A P-to-D turn passes R and N within ~0.4 s.";
+CM_ SG_ 261 Driver_Belt "B1 bits 6:5. Not reported while Restraints_Valid (B1 bit 7) is 0 after ignition on.";
+CM_ SG_ 261 Passenger_Belt "B1 bits 4:3.";
+CM_ SG_ 261 Passenger_Occupied "B2 bits 7:6. Seat weight sensor; clears ~20 s after the seat empties.";
+VAL_ 257 Gear_Selector 0 "P" 1 "R" 2 "N" 3 "D" ;
+VAL_ 261 Driver_Belt 1 "Buckled" 2 "Unbuckled" 3 "Init" ;
+VAL_ 261 Passenger_Belt 1 "Buckled" 2 "Unbuckled" 3 "Init" ;
+VAL_ 261 Passenger_Occupied 1 "Occupied" 2 "Empty" 3 "Init" ;
 VAL_ 327 Lamp_Mode 0 "Off" 1 "LowBeam" 2 "Parking" 3 "DRL_RightOff" 4 "DRL_LeftOff" 5 "DRL" ;
 CM_ SG_ 260 Engine_Oil_Life "Oil life remaining %, B5 bits 6:0 (PCM EngOilLife_Pc_Actl).";

@@ -61,7 +61,7 @@ pub fn decode_vehicle_speed(data: &[u8]) -> Option<f32> {
     if speed < 260.0 { Some(speed) } else { None }
 }
 
-/// 0x107 Byte 2: Park latch, not PRND.
+/// 0x107 Byte 2: Park latch, not PRND. For P/R/N/D use [`decode_gear_selector`] (0x101).
 /// `0x60` = Park. `0xE0` = not Park (Drive, Neutral, and Reverse all use 0xE0).
 /// Across every HS3 log, B2 is only these two values; bit 7 is the only difference.
 pub fn decode_gear_position(data: &[u8]) -> Option<&'static str> {
@@ -71,6 +71,68 @@ pub fn decode_gear_position(data: &[u8]) -> Option<&'static str> {
         0xE0 => Some("D"),
         _ => None,
     }
+}
+
+/// Gear selector (rotary dial) position.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GearSelector {
+    Park,
+    Reverse,
+    Neutral,
+    Drive,
+}
+
+impl GearSelector {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            GearSelector::Park => "P",
+            GearSelector::Reverse => "R",
+            GearSelector::Neutral => "N",
+            GearSelector::Drive => "D",
+        }
+    }
+}
+
+/// 0x101 B3 bits 5:4 — gear selector: 0 = P, 1 = R, 2 = N, 3 = D.
+/// A P→D turn of the dial passes R and N within ~0.4 s, so debounce if you log changes.
+pub fn decode_gear_selector(data: &[u8]) -> Option<GearSelector> {
+    if data.len() < 4 { return None; }
+    Some(match (data[3] >> 4) & 0x03 {
+        0 => GearSelector::Park,
+        1 => GearSelector::Reverse,
+        2 => GearSelector::Neutral,
+        _ => GearSelector::Drive,
+    })
+}
+
+/// Seat-belt and passenger-seat status from 0x105. Each field is `None` while the
+/// restraints module initialises (raw 3, right after ignition on) or reports 0.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Restraints {
+    pub driver_belt_buckled: Option<bool>,
+    pub passenger_belt_buckled: Option<bool>,
+    pub passenger_seat_occupied: Option<bool>,
+}
+
+fn yes_no_2bit(v: u8) -> Option<bool> {
+    match v & 0x03 {
+        1 => Some(true),
+        2 => Some(false),
+        _ => None,
+    }
+}
+
+/// 0x105 B1 bits 6:5 driver belt, B1 bits 4:3 passenger belt, B2 bits 7:6 passenger
+/// seat occupied. Each 2-bit field: 1 = yes, 2 = no, 3 = initialising.
+/// B1 bit 7 = 0 briefly after ignition on; the driver belt is not reported then.
+pub fn decode_restraints(data: &[u8]) -> Option<Restraints> {
+    if data.len() < 3 { return None; }
+    let b1 = data[1];
+    Some(Restraints {
+        driver_belt_buckled: if b1 & 0x80 != 0 { yes_no_2bit(b1 >> 5) } else { None },
+        passenger_belt_buckled: yes_no_2bit(b1 >> 3),
+        passenger_seat_occupied: yes_no_2bit(data[2] >> 6),
+    })
 }
 
 /// 0x103 Bytes 2-3 (Engine RPM & EV mode / running indicator)
@@ -961,6 +1023,39 @@ mod tests {
         assert_eq!(decode_oil_life(&[0x02, 0x9A, 0x8F, 0xF6, 0x40, 0xBD, 0x20, 0x00]), Some(61));
         assert_eq!(decode_oil_life(&[0, 0, 0, 0, 0, 0x7F, 0, 0]), None); // 127 > 100
         assert_eq!(decode_oil_life(&[0, 0, 0]), None);
+    }
+
+    #[test]
+    fn test_gear_selector() {
+        // 0x101 B3 values from the corpus; a P->D sweep reads 01 21 23 13 11 21 31.
+        let f = |b3: u8| [0x00, 0xA8, 0x00, b3, 0x43, 0xF9, 0xC0, 0xE9];
+        assert_eq!(decode_gear_selector(&f(0x01)), Some(GearSelector::Park));
+        assert_eq!(decode_gear_selector(&f(0x11)), Some(GearSelector::Reverse));
+        assert_eq!(decode_gear_selector(&f(0x13)), Some(GearSelector::Reverse));
+        assert_eq!(decode_gear_selector(&f(0x21)), Some(GearSelector::Neutral));
+        assert_eq!(decode_gear_selector(&f(0x31)), Some(GearSelector::Drive));
+        assert_eq!(GearSelector::Neutral.as_str(), "N");
+        assert_eq!(decode_gear_selector(&[0, 0, 0]), None);
+    }
+
+    #[test]
+    fn test_restraints() {
+        // Solo drive, driver buckled: B1=B0 B2=80.
+        let r = decode_restraints(&[0xE8, 0xB0, 0x80, 0x09]).unwrap();
+        assert_eq!(r.driver_belt_buckled, Some(true));
+        assert_eq!(r.passenger_belt_buckled, Some(false));
+        assert_eq!(r.passenger_seat_occupied, Some(false));
+        // Passenger aboard and buckled: B1=A8 B2=40.
+        let r = decode_restraints(&[0xE8, 0xA8, 0x40]).unwrap();
+        assert_eq!((r.driver_belt_buckled, r.passenger_belt_buckled, r.passenger_seat_occupied),
+                   (Some(true), Some(true), Some(true)));
+        // Parked, nobody buckled: B1=D0 B2=80.
+        let r = decode_restraints(&[0xE0, 0xD0, 0x80]).unwrap();
+        assert_eq!(r.driver_belt_buckled, Some(false));
+        // Ignition-on init: F8 C0 -> all unknown; 50 (bit7 clear) -> driver unknown.
+        assert_eq!(decode_restraints(&[0, 0xF8, 0xC0]).unwrap(), Restraints::default());
+        assert_eq!(decode_restraints(&[0, 0x50, 0xC0]).unwrap().driver_belt_buckled, None);
+        assert_eq!(decode_restraints(&[0, 0]), None);
     }
 
     #[test]

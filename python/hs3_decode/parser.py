@@ -110,6 +110,7 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             out["bcm_token"] = tok
     elif cid == 0x101 and len(d) >= 8:
         out["brake_pressed"] = bool(d[4] & 0x80)
+        out["gear_selector"] = "PRND"[(d[3] >> 4) & 3]
         out["pwrtrain"] = {0xE9: "mixed", 0xEA: "EV", 0xC7: "parked"}.get(d[7], f"0x{d[7]:02X}")
     elif cid == 0x103 and len(d) >= 4:
         raw = be16(d, 2)
@@ -136,6 +137,12 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             out["highrate8"] = d[1]
     elif cid == 0x105:
         out["hybrid_mode"] = {0xE0: "OFF", 0xE8: "CITY", 0xF8: "HIGHWAY"}.get(d[0], f"0x{d[0]:02X}")
+        if len(d) >= 3:
+            yn = {1: True, 2: False}
+            if d[1] & 0x80:
+                out["driver_belt_buckled"] = yn.get((d[1] >> 5) & 3)
+            out["passenger_belt_buckled"] = yn.get((d[1] >> 3) & 3)
+            out["passenger_seat_occupied"] = yn.get((d[2] >> 6) & 3)
         if len(d) >= 7:
             out["hybrid_strategy"] = {0x64: "CITY", 0x34: "HIGHWAY", 0x60: "PARK"}.get(d[6], f"0x{d[6]:02X}")
     elif cid == 0x106 and len(d) >= 2:

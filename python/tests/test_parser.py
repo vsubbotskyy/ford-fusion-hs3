@@ -20,6 +20,18 @@ class TestHs3Parser(unittest.TestCase):
         self.assertTrue(dec.get("doors_locked"))
         self.assertTrue(dec.get("headlights"))
 
+    def test_gear_selector_and_restraints(self):
+        self.assertEqual(parse_frame(0x101, [0, 0xA8, 0, 0x31, 0x43, 0xF9, 0xC0, 0xE9])["gear_selector"], "D")
+        self.assertEqual(parse_frame(0x101, [0, 0xA8, 0, 0x13, 0x43, 0xF9, 0xC0, 0xE9])["gear_selector"], "R")
+        self.assertEqual(parse_frame(0x101, [0, 0xA8, 0, 0x01, 0x43, 0xF9, 0xC0, 0xC7])["gear_selector"], "P")
+        dec = parse_frame(0x105, [0xE8, 0xA8, 0x40, 0x09, 0xFF, 0xB2, 0x64, 0x8C])
+        self.assertTrue(dec["driver_belt_buckled"])
+        self.assertTrue(dec["passenger_belt_buckled"])
+        self.assertTrue(dec["passenger_seat_occupied"])
+        dec = parse_frame(0x105, [0xE0, 0xF8, 0xC0, 0x08, 0, 0x10, 0x60, 0x08])
+        self.assertIsNone(dec["driver_belt_buckled"])
+        self.assertIsNone(dec["passenger_seat_occupied"])
+
     def test_load_and_parse_synthetic_csv(self):
         csv_path = Path(__file__).resolve().parents[2] / "testdata" / "synthetic_sample.csv"
         self.assertTrue(csv_path.exists(), f"Missing fixture at {csv_path}")

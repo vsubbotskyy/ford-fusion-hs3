@@ -54,6 +54,27 @@ Decoder: `decode_oil_life`.
 
 Decoder: `decode_lamp_mode` → `LampMode`.
 
+## Gear selector — `0x101` B3 bits 5:4
+
+| Raw | Gear |
+|---|---|
+| 0 | P |
+| 1 | R |
+| 2 | N |
+| 3 | D |
+
+A P→D turn of the dial passes R and N within ~0.4 s. Decoder: `decode_gear_selector` → `GearSelector`.
+
+## Seat belts and passenger seat — `0x105`
+
+| Field | Bits | 1 | 2 | 3 |
+|---|---|---|---|---|
+| Driver belt | B1 6:5 | buckled | unbuckled | init |
+| Passenger belt | B1 4:3 | buckled | unbuckled | init |
+| Passenger seat occupied | B2 7:6 | occupied | empty | init |
+
+B1 bit 7 = valid (0 briefly after ignition on). Decoder: `decode_restraints` → `Restraints`.
+
 ---
 
 ## Not on this tap
@@ -62,11 +83,8 @@ More TCU logs will not grow these. They live on MS-CAN, HS1, or in the cloud sna
 
 | Want | Where it actually lives |
 |---|---|
-| Window position / motion | MS-CAN door-status frames |
 | HVAC compressor / setpoint | MS-CAN |
 | Sunroof | body / MS-CAN |
-| Reverse vs Neutral as distinct gears | not this bus (Park vs not-Park only: `0x107` / `0x10A`) |
-| Oil life | FordPass / TCU snapshot — do not invent from HS-CAN4 |
 | Full `BodyInfo_3` (key-in, ignition nibble) | HS1 `0x3B3` |
 
 ---

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2 — 2026-09-23
+
+### Added
+- `decode_gear_selector` / `GearSelector`: P/R/N/D on `0x101` B3 bits 5:4. DBC `Gear_Selector`, Python `gear_selector`.
+- `decode_restraints` / `Restraints`: driver belt, passenger belt and passenger seat occupied on `0x105`
+  (B1 bits 6:5, B1 bits 4:3, B2 bits 7:6; 1 = yes, 2 = no, 3 = init). DBC `Driver_Belt`, `Passenger_Belt`,
+  `Passenger_Occupied`, `Restraints_Valid`; Python `driver_belt_buckled`, `passenger_belt_buckled`,
+  `passenger_seat_occupied`.
+
+### Changed
+- `docs/signals.md`: removed stale "not on this tap" rows for gears and oil life.
+
 ## 0.4.1 — 2026-09-23
 
 ### Added
