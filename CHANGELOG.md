@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1 — 2026-09-23
+
+### Added
+- `decode_oil_life`: engine oil life remaining % on `0x104` B5 bits 6:0 (the PCM's `EngOilLife_Pc_Actl`,
+  re-packed by the gateway). Matches OBD `Oil Life (%)`; DBC `Engine_Oil_Life`, Python `oil_life_pct`.
+- `decode_lamp_mode` / `LampMode`: exterior lamp mode on `0x147` B5 bits 7:5 (off, low beam,
+  parking (tentative), DRL, DRL with left/right side off while indicating). DBC `Lamp_Mode` with value table.
+- Python parser: `lamp_mode` key on `0x147`.
+
+### Changed
+- `BcmStatus::headlights_on` (`0x1B3` B1 bit 3) documented as **not** the headlamps; behaviour unchanged.
+
 ## 0.4.0 — 2026-09-22
 
 ### Added

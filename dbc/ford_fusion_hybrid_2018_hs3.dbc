@@ -39,6 +39,8 @@ BO_ 260 Msg_0x104: 8 Gateway
  SG_ HighRate8 : 15|8@0+ (1,0) [0|255] "" Vector__XXX
  SG_ Engine_Coolant_Temp : 23|8@0+ (1.0,-60) [-40|140] "degC" Vector__XXX
  SG_ HeatSoak_Analog : 39|8@0+ (1,0) [50|90] "" Vector__XXX
+ SG_ Engine_Oil_Life : 46|7@0+ (1,0) [0|100] "%" Vector__XXX
+ SG_ B5_Live_Flag : 47|1@0+ (1,0) [0|1] "" Vector__XXX
 
 BO_ 261 Msg_0x105: 8 Gateway
  SG_ Hybrid_Mode : 7|8@0+ (1,0) [0|255] "" Vector__XXX
@@ -122,6 +124,7 @@ BO_ 326 Msg_0x146: 8 TCU
 
 BO_ 327 Msg_0x147: 8 Gateway
  SG_ Remote_Start_Timer : 15|16@0+ (1,0) [0|900] "s" Vector__XXX
+ SG_ Lamp_Mode : 47|3@0+ (1,0) [0|7] "" Vector__XXX
 
 BO_ 339 Msg_0x153: 8 Gateway
  SG_ Trip_Avg_Mpg : 39|16@0+ (0.1,0) [0|400] "mpg" Vector__XXX
@@ -186,3 +189,6 @@ CM_ SG_ 261 Hybrid_Mode "0xE0 parked, 0xE8 city/EV-heavy, 0xF8 highway.";
 CM_ SG_ 339 Trip_Avg_Mpg "Native 0.1 US mpg/LSB. Metric conversion: L/100 km = 235.215 / mpg.";
 CM_ SG_ 274 Ctr_112_Init "B4 00 = counter block not initialised, 03 = initialised (B4:B5 >= 768). Latches 2-3 min into a drive. NOT motion. Formerly TCU_Motion.";
 CM_ SG_ 435 Ambient_Light "BCM twilight level: 00 dark, 01 dawn/dusk, 05 daylight. Formerly mislabelled TCU_Presence. Reads 00 in the wake/sleep boundary frame (B1=00) - ignore it there.";
+CM_ SG_ 327 Lamp_Mode "Exterior lamp mode, B5 bits 7:5. DRLs switch off on the indicating side (3/4). Parking (2) is tentative.";
+VAL_ 327 Lamp_Mode 0 "Off" 1 "LowBeam" 2 "Parking" 3 "DRL_RightOff" 4 "DRL_LeftOff" 5 "DRL" ;
+CM_ SG_ 260 Engine_Oil_Life "Oil life remaining %, B5 bits 6:0 (PCM EngOilLife_Pc_Actl).";

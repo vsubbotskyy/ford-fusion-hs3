@@ -20,7 +20,7 @@ Door, lamp, and lock bits were isolated with single-action labelled captures (on
 | Hood | B7 bit 3 | `hood_ajar` | labelled hood capture |
 | Front fog | B7 bit 0 | `front_fog_on` | labelled lights/fogs |
 | Rear fog | B0 bit 1 | `rear_fog_on` | only latches with front fog |
-| DRL / lighting master | B1 bit 3 | `headlights_on` | AUTO / dipped / high are **not** separate on this tap |
+| Lighting domain active | B1 bit 3 | `headlights_on` (legacy name) | Not the headlamps — use `0x147` B5 lamp mode below |
 | Unlock | B0 bit 2 | `doors_locked` inverted | command **verdict** — see [tcu-remote.md](tcu-remote.md) §7 |
 | Turn LEFT | B1 bit 0 latch; B1 bit 1 + B6 bit 6 flash | `turn_left` | stalk latch and bulb flash |
 | Turn RIGHT | B7 bit 6 latch; B7 bit 7 + B4 bit 3 flash | `turn_right` | stalk latch and bulb flash |
@@ -29,6 +29,30 @@ Door, lamp, and lock bits were isolated with single-action labelled captures (on
 | Day / night | B1 bits 7:6 | `day_night` | `1` day, `2` night |
 
 Windows and sunroof: no bits toggle on this tap. Do not invent UI from HS-CAN4.
+
+---
+
+## Engine oil life — `0x104` B5 bits 6:0
+
+| Bits | Meaning |
+|---|---|
+| B5 6:0 | Engine oil life remaining, % (PCM `EngOilLife_Pc_Actl`, re-packed by the gateway). Cross-checked against OBD. |
+| B5 7 | Live/run flag, not part of the value |
+
+Decoder: `decode_oil_life`.
+
+## Exterior lamp mode — `0x147` B5 bits 7:5
+
+| Raw | B5 | Mode |
+|---|---|---|
+| 0 | `00` | Off |
+| 1 | `20` | Low beam |
+| 2 | `40` | Parking (tentative) |
+| 3 | `60` | DRL, right side off (right indicator active) |
+| 4 | `80` | DRL, left side off (left indicator active) |
+| 5 | `A0` | DRL |
+
+Decoder: `decode_lamp_mode` → `LampMode`.
 
 ---
 

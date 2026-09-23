@@ -36,6 +36,8 @@ pub struct BcmStatus {
     /// Lock/unlock confirmation courtesy flash (all flasher bulbs active without stalk latch).
     pub courtesy_flash: bool,
     pub flasher_bulb_on: bool,
+    /// B1 bit 3. **Not the headlamps** despite the name (it stays set with only the DRLs lit).
+    /// Kept for compatibility; use [`decode_lamp_mode`] (0x147) for the exterior lamp state.
     pub headlights_on: bool,
     pub front_fog_on: bool,
     pub rear_fog_on: bool,
@@ -164,6 +166,14 @@ pub fn decode_pedal_position(data: &[u8]) -> Option<f32> {
     } else {
         Some(0.0)
     }
+}
+
+/// 0x104 Byte 5 bits 6:0 — engine oil life remaining, percent (the PCM's `EngOilLife_Pc_Actl`,
+/// re-packed by the gateway). Bit 7 of B5 is a separate live/run flag and is masked off.
+pub fn decode_oil_life(data: &[u8]) -> Option<u8> {
+    if data.len() < 6 { return None; }
+    let pct = data[5] & 0x7F;
+    if pct <= 100 { Some(pct) } else { None }
 }
 
 /// 0x104 Byte 2 (Engine Coolant Temperature: raw - 60.0 °C) — Verified r=0.9994
@@ -435,6 +445,67 @@ pub fn decode_remote_start_timer(data: &[u8]) -> Option<u16> {
     if data.len() < 3 { return None; }
     let secs = ((data[1] as u16) << 8) | (data[2] as u16);
     Some(secs)
+}
+
+/// Exterior lamp mode, `0x147` B5 bits 7:5 (3-bit value).
+///
+/// | raw | mode |
+/// |---|---|
+/// | 0 | `Off` |
+/// | 1 | `LowBeam` |
+/// | 2 | `Parking` (tentative) |
+/// | 3 | `DrlRightOff` — DRL with the right side off while the right indicator is active |
+/// | 4 | `DrlLeftOff` — DRL with the left side off while the left indicator is active |
+/// | 5 | `Drl` |
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LampMode {
+    Off,
+    LowBeam,
+    /// Tentative.
+    Parking,
+    DrlRightOff,
+    DrlLeftOff,
+    Drl,
+    /// 6 or 7 — never observed.
+    Unknown(u8),
+}
+
+impl LampMode {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            LampMode::Off => "OFF",
+            LampMode::LowBeam => "LOW_BEAM",
+            LampMode::Parking => "PARKING",
+            LampMode::DrlRightOff => "DRL_RIGHT_OFF",
+            LampMode::DrlLeftOff => "DRL_LEFT_OFF",
+            LampMode::Drl => "DRL",
+            LampMode::Unknown(_) => "UNKNOWN",
+        }
+    }
+
+    /// True while the low-beam headlamps are lit.
+    pub fn low_beam(&self) -> bool {
+        matches!(self, LampMode::LowBeam)
+    }
+
+    /// True while daytime running lamps are active (either or both sides).
+    pub fn drl(&self) -> bool {
+        matches!(self, LampMode::Drl | LampMode::DrlLeftOff | LampMode::DrlRightOff)
+    }
+}
+
+/// 0x147 B5 bits 7:5 — exterior lamp mode. See [`LampMode`].
+pub fn decode_lamp_mode(data: &[u8]) -> Option<LampMode> {
+    if data.len() < 6 { return None; }
+    Some(match data[5] >> 5 {
+        0 => LampMode::Off,
+        1 => LampMode::LowBeam,
+        2 => LampMode::Parking,
+        3 => LampMode::DrlRightOff,
+        4 => LampMode::DrlLeftOff,
+        5 => LampMode::Drl,
+        n => LampMode::Unknown(n),
+    })
 }
 
 /// 0x100 Bytes 0-1 (BCM Rolling Authentication Token)
@@ -881,6 +952,33 @@ mod tests {
         assert_eq!(decode_remote_start_timer(&[0x22, 0x03, 0x84]), Some(900));
         // 0x00 0x00 = 0 seconds (idle / drive)
         assert_eq!(decode_remote_start_timer(&[0x22, 0x00, 0x00]), Some(0));
+    }
+
+    #[test]
+    fn test_oil_life() {
+        // B5 values seen in the corpus: 0x3A (58 %, flag clear), 0xBD (61 %, flag set).
+        assert_eq!(decode_oil_life(&[0x00, 0x00, 0x58, 0x02, 0x4C, 0x3A, 0x00, 0x00]), Some(58));
+        assert_eq!(decode_oil_life(&[0x02, 0x9A, 0x8F, 0xF6, 0x40, 0xBD, 0x20, 0x00]), Some(61));
+        assert_eq!(decode_oil_life(&[0, 0, 0, 0, 0, 0x7F, 0, 0]), None); // 127 > 100
+        assert_eq!(decode_oil_life(&[0, 0, 0]), None);
+    }
+
+    #[test]
+    fn test_lamp_mode() {
+        // Real frames from the corpus (B5 is the 6th byte).
+        let f = |b5: u8| [0x22, 0x00, 0x00, 0x00, 0x04, b5, 0x00, 0x00];
+        assert_eq!(decode_lamp_mode(&f(0x00)), Some(LampMode::Off));
+        assert_eq!(decode_lamp_mode(&f(0x20)), Some(LampMode::LowBeam));
+        assert_eq!(decode_lamp_mode(&f(0x40)), Some(LampMode::Parking));
+        assert_eq!(decode_lamp_mode(&f(0x60)), Some(LampMode::DrlRightOff));
+        assert_eq!(decode_lamp_mode(&f(0x80)), Some(LampMode::DrlLeftOff));
+        assert_eq!(decode_lamp_mode(&f(0xA0)), Some(LampMode::Drl));
+        assert_eq!(decode_lamp_mode(&f(0xE0)), Some(LampMode::Unknown(7)));
+        // Low bits of B5 are not part of the field.
+        assert_eq!(decode_lamp_mode(&f(0xA3)), Some(LampMode::Drl));
+        assert!(LampMode::LowBeam.low_beam() && !LampMode::Drl.low_beam());
+        assert!(LampMode::DrlLeftOff.drl() && !LampMode::Off.drl());
+        assert_eq!(decode_lamp_mode(&[0x22, 0x00]), None);
     }
 
     #[test]

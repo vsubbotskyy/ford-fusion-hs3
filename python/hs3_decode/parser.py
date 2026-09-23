@@ -129,6 +129,8 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         out["pedal_pct"] = max(0.0, min(100.0, delta / 5.3)) if delta > 0 else 0.0
     elif cid == 0x104 and len(d) >= 3:
         out["coolant_c"] = d[2] - 60.0
+        if len(d) >= 6 and (d[5] & 0x7F) <= 100:
+            out["oil_life_pct"] = d[5] & 0x7F
         out["alive2"] = d[0] & 3
         if len(d) >= 2:
             out["highrate8"] = d[1]
@@ -249,6 +251,8 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             out["seq"] = d[3]
     elif cid == 0x147 and len(d) >= 3:
         out["remote_start_s"] = be16(d, 1)
+        if len(d) >= 6:
+            out["lamp_mode"] = {0: "OFF", 1: "LOW_BEAM", 2: "PARKING", 3: "DRL_RIGHT_OFF", 4: "DRL_LEFT_OFF", 5: "DRL"}.get(d[5] >> 5, "UNKNOWN")
     elif cid == 0x153 and len(d) >= 6:
         raw = be16(d, 4)
         if 0 < raw < 1000:

@@ -53,6 +53,8 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Turn bulb flash** | `0x1B3` (435) | 8 | 10 Hz | LEFT: B1 bit 1 + B6 bit 6 · RIGHT: B7 bit 7 + B4 bit 3 | ~1.5 Hz | `true` / `false` | Bulb flash phase |
 | **Ignition State** | `0x10E` (270) | 8 | ~1.8 kHz | Byte 0 + Byte 7 | `0x17`="ON"; `0x03`="OFF" only if B7=`00` | `"ON"`, `"OFF"` | B0=`03` while B7≠0 is still ON |
 | **Remote Start Timer** | `0x147` (327) | 8 | 15.2 Hz | Bytes 1–2 (16-bit BE) | `(b1 << 8) \| b2` | `900` $\rightarrow$ `0` seconds | Remote run countdown |
+| **Engine oil life** | `0x104` (260) | 8 | ~10 Hz | Byte 5 bits 6:0 | `b5 & 0x7F` | 0–100 % | PCM `EngOilLife_Pc_Actl`; bit 7 is a live flag |
+| **Exterior lamp mode** | `0x147` (327) | 8 | 15.2 Hz | Byte 5 bits 7:5 | `b5 >> 5` | 0 off, 1 low beam, 2 parking (tentative), 3 DRL right-off, 4 DRL left-off, 5 DRL | `decode_lamp_mode`; DRL side goes dark while indicating |
 | **VIN Broadcast** | `0x11A` (282) | 8 | ~1.8 kHz | Multiplexed Chunks 0, 1, 2 | 3 frames concatenated | 17-char ASCII | Mux reassembly (e.g. `3FA6P0XX9YY123456`) |
 | **BCM Auth Token** | `0x100` (256) | 8 | ~1.9 kHz | Bytes 0–1 (16-bit BE) | `(b0 << 8) \| b1` | Increments ~800ms | BCM rolling challenge (must ignore zeros) |
 | **Ambient light level** | `0x1B3` (435) | 8 | 10 Hz | Byte 5 | raw | `0x00` dark / `0x01` dawn-dusk / `0x05` daylight | Twilight sensor |
