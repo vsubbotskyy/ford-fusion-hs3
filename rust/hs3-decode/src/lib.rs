@@ -651,6 +651,33 @@ pub fn decode_vehicle_clock(data: &[u8]) -> Option<(u8, u8, u8)> {
     }
 }
 
+/// 0x100 Byte 6: HV (traction) battery temperature, °C = raw × 0.5 − 50.
+/// r = 0.9975 vs OBD `HV Battery Temp`; falls while parked, so it is not a counter.
+pub fn decode_hv_battery_temp(data: &[u8]) -> Option<f32> {
+    if data.len() < 7 { return None; }
+    Some(data[6] as f32 * 0.5 - 50.0)
+}
+
+/// 0x108 Byte 0: cabin temperature, °C ≈ raw × 0.5 − 57. **Candidate** (r = 0.97 / 0.98 vs
+/// OBD `Temp Inside Car` in two logs). Same byte as the superseded [`decode_hybrid_soc`].
+pub fn decode_cabin_temp(data: &[u8]) -> Option<f32> {
+    if data.is_empty() { return None; }
+    Some(data[0] as f32 * 0.5 - 57.0)
+}
+
+/// 0x108 B1:B2: four window positions, **candidate**. One nibble per window, in the order
+/// B1 high, B1 low, B2 high, B2 low; which physical window each is has not been confirmed.
+/// Nibble bits 3:1 = 1 (closed) … 5 (fully open), returned as 0/25/50/75/100 % open.
+/// Nibble bit 0 is a flag that is not part of the position.
+pub fn decode_windows(data: &[u8]) -> Option<[Option<u8>; 4]> {
+    if data.len() < 3 { return None; }
+    let pos = |nib: u8| match (nib >> 1) & 0x07 {
+        v @ 1..=5 => Some((v - 1) * 25),
+        _ => None,
+    };
+    Some([pos(data[1] >> 4), pos(data[1] & 0x0F), pos(data[2] >> 4), pos(data[2] & 0x0F)])
+}
+
 /// 0x108 Byte 0 * 0.5. SUPERSEDED — this is NOT traction SOC (r=0.26 vs OBD,
 /// pinned ~78-83%). Kept for reference only; real SOC is `decode_hybrid_soc_10f`.
 pub fn decode_hybrid_soc(data: &[u8]) -> Option<f32> {
@@ -1023,6 +1050,22 @@ mod tests {
         assert_eq!(decode_oil_life(&[0x02, 0x9A, 0x8F, 0xF6, 0x40, 0xBD, 0x20, 0x00]), Some(61));
         assert_eq!(decode_oil_life(&[0, 0, 0, 0, 0, 0x7F, 0, 0]), None); // 127 > 100
         assert_eq!(decode_oil_life(&[0, 0, 0]), None);
+    }
+
+    #[test]
+    fn test_temps_and_windows() {
+        // 0x100 B6 = 0x9C -> 28 °C.
+        assert_eq!(decode_hv_battery_temp(&[0x7C, 0x60, 0x20, 0x08, 0x5F, 0x90, 0x9C, 0xC0]), Some(28.0));
+        assert_eq!(decode_hv_battery_temp(&[0; 6]), None);
+        // 0x108 B0 = 0xA3 (163) -> 24.5 °C.
+        assert_eq!(decode_cabin_temp(&[0xA3, 0x33, 0x33]), Some(24.5));
+        // All closed; one window fully open (B1 = B3); two open (BB); mid-travel frame 42.
+        assert_eq!(decode_windows(&[0xA3, 0x33, 0x33]), Some([Some(0), Some(0), Some(0), Some(0)]));
+        assert_eq!(decode_windows(&[0xA3, 0xB3, 0x33]), Some([Some(100), Some(0), Some(0), Some(0)]));
+        assert_eq!(decode_windows(&[0xA3, 0xBB, 0x33]), Some([Some(100), Some(100), Some(0), Some(0)]));
+        assert_eq!(decode_windows(&[0xA3, 0x72, 0x33]), Some([Some(50), Some(0), Some(0), Some(0)]));
+        assert_eq!(decode_windows(&[0xA3, 0x00, 0x33]), Some([None, None, Some(0), Some(0)]));
+        assert_eq!(decode_windows(&[0xA3, 0x33]), None);
     }
 
     #[test]

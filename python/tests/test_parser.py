@@ -20,6 +20,12 @@ class TestHs3Parser(unittest.TestCase):
         self.assertTrue(dec.get("doors_locked"))
         self.assertTrue(dec.get("headlights"))
 
+    def test_temps_and_windows(self):
+        self.assertEqual(parse_frame(0x100, [0x7C, 0x60, 0x20, 0x08, 0x5F, 0x90, 0x9C, 0xC0])["hv_battery_temp_c"], 28.0)
+        dec = parse_frame(0x108, [0xA3, 0xB3, 0x33, 0xF0, 0xE5, 0, 0, 0])
+        self.assertEqual(dec["cabin_temp_c"], 24.5)
+        self.assertEqual([dec[f"window_{n}_open_pct"] for n in range(1, 5)], [100, 0, 0, 0])
+
     def test_gear_selector_and_restraints(self):
         self.assertEqual(parse_frame(0x101, [0, 0xA8, 0, 0x31, 0x43, 0xF9, 0xC0, 0xE9])["gear_selector"], "D")
         self.assertEqual(parse_frame(0x101, [0, 0xA8, 0, 0x13, 0x43, 0xF9, 0xC0, 0xE9])["gear_selector"], "R")

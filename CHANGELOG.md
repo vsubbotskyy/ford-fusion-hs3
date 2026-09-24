@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.3 — 2026-09-23
+
+### Added
+- `decode_hv_battery_temp`: traction battery temperature on `0x100` B6, °C = raw × 0.5 − 50
+  (r = 0.9975 vs OBD). DBC `HV_Battery_Temp` replaces `Token_SlowCount`; Python `hv_battery_temp_c`.
+- `decode_cabin_temp` (**candidate**): cabin temperature on `0x108` B0, °C ≈ raw × 0.5 − 57.
+  DBC `Cabin_Temp` replaces `Hybrid_SOC`; Python `cabin_temp_c`.
+- `decode_windows` (**candidate**): four window positions on `0x108` B1:B2, 0–100 % open in 25 % steps.
+  Physical window per nibble not confirmed. DBC `Window_1`..`Window_4`; Python `window_N_open_pct`.
+
+### Deprecated
+- Python `hybrid_soc_pct` on `0x108` (it is not SOC); removal in 0.5.
+
 ## 0.4.2 — 2026-09-23
 
 ### Added

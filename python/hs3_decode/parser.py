@@ -108,6 +108,8 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         tok = be16(d, 0)
         if tok:
             out["bcm_token"] = tok
+        if len(d) >= 7:
+            out["hv_battery_temp_c"] = d[6] * 0.5 - 50.0
     elif cid == 0x101 and len(d) >= 8:
         out["brake_pressed"] = bool(d[4] & 0x80)
         out["gear_selector"] = "PRND"[(d[3] >> 4) & 3]
@@ -165,9 +167,14 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         out["speed_kmh"] = be16(d, 0) * 0.01
         out["gear"] = {0x60: "P", 0xE0: "D/R/N"}.get(d[2])
     elif cid == 0x108:
+        out["cabin_temp_c"] = d[0] * 0.5 - 57.0  # candidate
         pct = d[0] * 0.5
         if 40.0 <= pct <= 100.0:
-            out["hybrid_soc_pct"] = pct
+            out["hybrid_soc_pct"] = pct  # deprecated: not SOC, removal in 0.5
+        if len(d) >= 3:
+            for n, nib in enumerate((d[1] >> 4, d[1] & 0x0F, d[2] >> 4, d[2] & 0x0F), 1):
+                v = (nib >> 1) & 7
+                out[f"window_{n}_open_pct"] = (v - 1) * 25 if 1 <= v <= 5 else None  # candidate
     elif cid == 0x109 and len(d) >= 5:
         out["odometer_km"] = be24(d, 0)
         out["fuel_accum"] = be16(d, 3)

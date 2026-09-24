@@ -57,7 +57,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _f("token status (04 vs 08)"),
         _f("token companion discrete 3F-9F (22 values across captures)"),
         _f("high nibble 5/9/D; low nibble always 0"),
-        _s("slow monotonic counter ~110 s/LSB"),
+        _s("HV battery temperature C = raw*0.5-50"),
         _f("bit7 ~50% alive toggle; low 5A-5E"),
     ],
     0x101: [
@@ -122,9 +122,9 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _pad(0),
     ],
     0x108: [
-        _s("HV SOC % = raw*0.5"),
-        _f("SOC companion (33 typical)"),
-        _f("SOC companion (33 typical)"),
+        _s("cabin temperature candidate C = raw*0.5-57 (not SOC)"),
+        _f("window position candidate: nibbles bits 3:1 = 1 closed..5 open"),
+        _f("window position candidate: nibbles bits 3:1 = 1 closed..5 open"),
         _f("B3 status B0 vs 30"),
         _f("B4 status C3 typical"),
         _pad(0),
