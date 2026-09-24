@@ -123,8 +123,8 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
     ],
     0x108: [
         _s("cabin temperature candidate C = raw*0.5-57 (not SOC)"),
-        _f("window position candidate: nibbles bits 3:1 = 1 closed..5 open"),
-        _f("window position candidate: nibbles bits 3:1 = 1 closed..5 open"),
+        _f("window positions: hi nibble FL, lo nibble FR (B1) / RL, RR (B2); bits 3:1 = 1 closed..5 open"),
+        _f("window positions: hi nibble FL, lo nibble FR (B1) / RL, RR (B2); bits 3:1 = 1 closed..5 open"),
         _f("B3 status B0 vs 30"),
         _f("B4 status C3 typical"),
         _pad(0),

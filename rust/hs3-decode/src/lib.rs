@@ -665,10 +665,12 @@ pub fn decode_cabin_temp(data: &[u8]) -> Option<f32> {
     Some(data[0] as f32 * 0.5 - 57.0)
 }
 
-/// 0x108 B1:B2: four window positions, **candidate**. One nibble per window, in the order
-/// B1 high, B1 low, B2 high, B2 low; which physical window each is has not been confirmed.
+/// 0x108 B1:B2: four window positions, % open, in the order
+/// `[front_left (driver), front_right (passenger), rear_left, rear_right]`
+/// (B1 high, B1 low, B2 high, B2 low; verified with a labelled test 2026-09-24).
 /// Nibble bits 3:1 = 1 (closed) … 5 (fully open), returned as 0/25/50/75/100 % open.
-/// Nibble bit 0 is a flag that is not part of the position.
+/// Nibble bit 0 is a flag that is not part of the position (drops briefly while a switch
+/// is pressed). See [`decode_window_positions`] for named fields.
 pub fn decode_windows(data: &[u8]) -> Option<[Option<u8>; 4]> {
     if data.len() < 3 { return None; }
     let pos = |nib: u8| match (nib >> 1) & 0x07 {
@@ -676,6 +678,21 @@ pub fn decode_windows(data: &[u8]) -> Option<[Option<u8>; 4]> {
         _ => None,
     };
     Some([pos(data[1] >> 4), pos(data[1] & 0x0F), pos(data[2] >> 4), pos(data[2] & 0x0F)])
+}
+
+/// Window positions, % open (0/25/50/75/100). `None` when the nibble is out of range.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct WindowPositions {
+    pub front_left: Option<u8>,
+    pub front_right: Option<u8>,
+    pub rear_left: Option<u8>,
+    pub rear_right: Option<u8>,
+}
+
+/// 0x108 B1:B2 as named windows. Same data as [`decode_windows`].
+pub fn decode_window_positions(data: &[u8]) -> Option<WindowPositions> {
+    let [front_left, front_right, rear_left, rear_right] = decode_windows(data)?;
+    Some(WindowPositions { front_left, front_right, rear_left, rear_right })
 }
 
 /// 0x108 Byte 0 * 0.5. SUPERSEDED — this is NOT traction SOC (r=0.26 vs OBD,
@@ -1066,6 +1083,9 @@ mod tests {
         assert_eq!(decode_windows(&[0xA3, 0x72, 0x33]), Some([Some(50), Some(0), Some(0), Some(0)]));
         assert_eq!(decode_windows(&[0xA3, 0x00, 0x33]), Some([None, None, Some(0), Some(0)]));
         assert_eq!(decode_windows(&[0xA3, 0x33]), None);
+        let w = decode_window_positions(&[0xA3, 0x3B, 0x53]).unwrap();
+        assert_eq!((w.front_left, w.front_right, w.rear_left, w.rear_right),
+                   (Some(0), Some(100), Some(25), Some(0)));
     }
 
     #[test]

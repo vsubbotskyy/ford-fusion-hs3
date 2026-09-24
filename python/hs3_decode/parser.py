@@ -172,9 +172,12 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         if 40.0 <= pct <= 100.0:
             out["hybrid_soc_pct"] = pct  # deprecated: not SOC, removal in 0.5
         if len(d) >= 3:
+            names = ("fl", "fr", "rl", "rr")
             for n, nib in enumerate((d[1] >> 4, d[1] & 0x0F, d[2] >> 4, d[2] & 0x0F), 1):
                 v = (nib >> 1) & 7
-                out[f"window_{n}_open_pct"] = (v - 1) * 25 if 1 <= v <= 5 else None  # candidate
+                pct = (v - 1) * 25 if 1 <= v <= 5 else None
+                out[f"window_{names[n - 1]}_open_pct"] = pct
+                out[f"window_{n}_open_pct"] = pct  # deprecated alias, removal in 0.5
     elif cid == 0x109 and len(d) >= 5:
         out["odometer_km"] = be24(d, 0)
         out["fuel_accum"] = be16(d, 3)

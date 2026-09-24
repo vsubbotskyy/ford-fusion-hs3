@@ -25,6 +25,7 @@ class TestHs3Parser(unittest.TestCase):
         dec = parse_frame(0x108, [0xA3, 0xB3, 0x33, 0xF0, 0xE5, 0, 0, 0])
         self.assertEqual(dec["cabin_temp_c"], 24.5)
         self.assertEqual([dec[f"window_{n}_open_pct"] for n in range(1, 5)], [100, 0, 0, 0])
+        self.assertEqual([dec[f"window_{w}_open_pct"] for w in ("fl", "fr", "rl", "rr")], [100, 0, 0, 0])
 
     def test_gear_selector_and_restraints(self):
         self.assertEqual(parse_frame(0x101, [0, 0xA8, 0, 0x31, 0x43, 0xF9, 0xC0, 0xE9])["gear_selector"], "D")

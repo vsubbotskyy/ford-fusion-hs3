@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.4 — 2026-09-24
+
+### Added
+- `decode_window_positions` / `WindowPositions`: named front-left (driver), front-right, rear-left,
+  rear-right window positions on `0x108` B1:B2. Order verified with a labelled test; no longer a candidate.
+- Python keys `window_fl_open_pct`, `window_fr_open_pct`, `window_rl_open_pct`, `window_rr_open_pct`.
+
+### Changed
+- DBC `Window_1`..`Window_4` renamed `Window_FL`, `Window_FR`, `Window_RL`, `Window_RR`.
+- `decode_windows` docs: array order is `[FL, FR, RL, RR]`.
+
+### Deprecated
+- Python `window_1_open_pct` … `window_4_open_pct`; removal in 0.5.
+
 ## 0.4.3 — 2026-09-23
 
 ### Added

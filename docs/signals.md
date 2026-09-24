@@ -63,9 +63,16 @@ Decoder: `decode_lamp_mode` → `LampMode`.
 
 Decoders: `decode_hv_battery_temp`, `decode_cabin_temp`.
 
-## Window positions — `0x108` B1:B2 (candidate)
+## Window positions — `0x108` B1:B2
 
-One nibble per window: B1 high, B1 low, B2 high, B2 low. Nibble bits 3:1 = 1 (closed) … 5 (fully open); bit 0 is a separate flag. Which window each nibble is has not been confirmed. Decoder: `decode_windows` → `[Option<u8>; 4]` percent open.
+| Nibble | Window |
+|---|---|
+| B1 high | Front left (driver) |
+| B1 low | Front right (passenger) |
+| B2 high | Rear left |
+| B2 low | Rear right |
+
+Nibble bits 3:1 = 1 (closed) … 5 (fully open); bit 0 is a separate flag. Decoders: `decode_window_positions` → `WindowPositions`, `decode_windows` → `[Option<u8>; 4]` percent open.
 
 ## Gear selector — `0x101` B3 bits 5:4
 
