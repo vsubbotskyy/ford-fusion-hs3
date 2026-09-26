@@ -50,7 +50,7 @@ Exactly **63 distinct 11-bit CAN IDs** exist on this bus. A representative sampl
 | **Vehicle Speed** | `0x107` | Bytes 0–1 BE $\times 0.01\text{ km/h}$ | $r = 0.99995$ vs OBD-II | High-rate dynamic broadcast |
 | **Engine RPM / EV** | `0x103` | Bytes 2–3 BE `(raw - 0xE000) * 2` | $r = 0.9980$ vs OBD-II | `0xE000` indicates EV drive mode |
 | **Coolant Temp** | `0x104` | Byte 2 `raw - 60` °C | $r = 0.9994$ vs OBD-II | Engine coolant temperature |
-| **Fuel Tank Level %** | `0x174` | Bytes 1–2 BE $\times 0.1\text{ \%}$ | $r = 0.9998$ vs OBD-II | Raw 0 and 1000 rejected as invalid |
+| ~~Fuel Tank Level %~~ | `0x174` | Bytes 1–2 BE $\times 0.1\text{ \%}$ | **retracted in 0.4.5** — not the tank level | Use `0x118` DTE; see CHANGELOG |
 | **Total Odometer** | `0x109` | Bytes 0–2 (24-bit BE) 1 km/LSB | Verified vs cluster | Lifetime vehicle odometer |
 | **Hybrid Battery SOC** | `0x108` | Byte 0 $\times 0.5\text{ \%}$ | Verified vs BECM UDS | Pack State of Charge |
 | **HV Pack Current** | `0x07A` | Motorola 15-bit $\times 0.05 - 750\text{ A}$ | Empirical discharge/regen | Pack load range (−116 A to +140 A) |

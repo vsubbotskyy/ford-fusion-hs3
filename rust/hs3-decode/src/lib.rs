@@ -321,9 +321,15 @@ pub fn decode_trip_and_dte(data: &[u8]) -> Option<(f32, f32)> {
     Some((ice, dte))
 }
 
-/// 0x174 Bytes 1-2 (Fuel Tank Level %: Big-Endian, 0.1% / LSB)
-/// 0x035B = 859 -> 85.9%. 0x03E8 (100.0%) is an init/invalid sentinel on this car.
-pub fn decode_fuel_level(data: &[u8]) -> Option<f32> {
+/// 0x174 Bytes 1-2, Big-Endian × 0.1 %. **Not the tank level.**
+///
+/// The field sits on `0x03E8` (100.0 %) most of the time and only carries other
+/// values in short bursts that jump around within one drive (70–99 %), while the
+/// cluster's distance to empty fell from 1027 to 198 km over the same captures.
+/// Likely an instantaneous / unfiltered sender value tied to the gauge-commit strobe
+/// (B3 bit 7). Returns the burst value; `0` and `1000` are rejected. For fuel, use
+/// [`decode_dte`].
+pub fn decode_fuel_sender_pct(data: &[u8]) -> Option<f32> {
     if data.len() < 3 { return None; }
     let raw = ((data[1] as u16) << 8) | (data[2] as u16);
     if raw == 0 || raw == 1000 {
@@ -335,6 +341,12 @@ pub fn decode_fuel_level(data: &[u8]) -> Option<f32> {
     } else {
         None
     }
+}
+
+/// Old name of [`decode_fuel_sender_pct`]. It was believed to be the tank level; it is not.
+#[deprecated(since = "0.4.5", note = "0x174 B1:B2 is not the tank level: use decode_dte for fuel, decode_fuel_sender_pct for the raw value")]
+pub fn decode_fuel_level(data: &[u8]) -> Option<f32> {
+    decode_fuel_sender_pct(data)
 }
 
 /// 0x174 B3 bit 7 is IPC anti-slosh / low-speed fuel-gauge commit, not the lamp.
@@ -1029,9 +1041,9 @@ mod tests {
     }
 
     #[test]
-    fn test_fuel_level() {
-        assert_eq!(decode_fuel_level(&[0x00, 0x03, 0xE8]), None);
-        assert_eq!(decode_fuel_level(&[0x00, 0x03, 0x5B]), Some(85.9));
+    fn test_fuel_sender_pct() {
+        assert_eq!(decode_fuel_sender_pct(&[0x00, 0x03, 0xE8]), None);
+        assert_eq!(decode_fuel_sender_pct(&[0x00, 0x03, 0x5B]), Some(85.9));
     }
 
     #[test]

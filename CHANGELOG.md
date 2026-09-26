@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.5 — 2026-09-26
+
+### Changed
+- `0x174` B1:B2 is **not the fuel tank level** (retracts the 0.1 "Fuel Tank Level %" claim). It sits on
+  the `1000` sentinel most of the time and only bursts 70–99 % values that jump around within one drive,
+  while the cluster's distance to empty fell from 1027 to 198 km across the same captures. The old
+  r = 0.9998 came from a near-full tank. Use `decode_dte` (`0x118`) for fuel.
+- DBC `Fuel_Level` renamed `Fuel_Sender_Pct` with the warning in its comment.
+
+### Added
+- `decode_fuel_sender_pct` (same bytes, honest name); Python key `fuel_sender_pct`.
+
+### Deprecated
+- `decode_fuel_level` and Python `fuel_pct`; removal in 0.5.
+
 ## 0.4.4 — 2026-09-24
 
 ### Added

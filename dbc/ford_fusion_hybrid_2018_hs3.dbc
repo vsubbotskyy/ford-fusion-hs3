@@ -151,7 +151,7 @@ BO_ 350 Msg_0x15E: 8 Gateway
  SG_ Gnss_VDOP m48 : 39|8@0+ (0.1,0) [0|25.4] "" Vector__XXX
 
 BO_ 372 Msg_0x174: 8 Gateway
- SG_ Fuel_Level : 15|16@0+ (0.1,0) [0|100] "%" Vector__XXX
+ SG_ Fuel_Sender_Pct : 15|16@0+ (0.1,0) [0|100] "%" Vector__XXX
  SG_ Fuel_Sender_Ok : 25|2@0+ (1,0) [0|3] "" Vector__XXX
  SG_ Fuel_Gauge_Update : 31|1@0+ (1,0) [0|1] "" Vector__XXX
 
@@ -190,7 +190,7 @@ CM_ BO_ 350 "Mux 0x16/0x76/0x86 = GPS (B1:B2 lat, B5:B6 lon). Mux 0x01 = MM:SS c
 CM_ SG_ 268 Motor_Temp "NOT motor temp. Live 64-77 / off 0. Retracted — see docs/signals.md.";
 CM_ SG_ 321 High_Res_Empower_Gauge "16-bit analog cluster gauge. 10000 = 0 kW. < 10000 is regen, > 10000 is power. Was previously misidentified as Coarse HV Current (B0) + Intake MAP (B1:B2) due to byte misalignment.";
 CM_ SG_ 272 Motor_Angle "B1:B2 * 360/65536 deg. B3 bit7 resolver-valid. FF FF FF asleep.";
-CM_ SG_ 372 Fuel_Level "B1:B2 BE * 0.1 %. raw 0 and 1000 are invalid, not a full tank.";
+CM_ SG_ 372 Fuel_Sender_Pct "B1:B2 BE * 0.1 %. NOT the tank level: 1000 sentinel most of the time, short 70-99 % bursts. Use 0x118 DTE. raw 0 and 1000 are invalid.";
 CM_ SG_ 372 Fuel_Sender_Ok "B3 bits 0-1. Always 3 in every capture. Likely sender OK / data valid.";
 CM_ SG_ 372 Fuel_Gauge_Update "B3 bit 7. NOT the low-fuel lamp. 1-5 s strobe at <7 km/h when filtered % commits. Real lamp unmapped — see docs/signals.md.";
 CM_ SG_ 322 ICE_Running "0x64 = EV, 0x68 = ICE running.";

@@ -293,8 +293,11 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             out["lat"] = round(lat, 6)
             out["lon"] = round(lon, 6)
     elif cid == 0x174 and len(d) >= 3:
+        # B1:B2 is NOT the tank level (0.4.5): 100.0 sentinel most of the time,
+        # short 70-99 % bursts. Use 0x118 DTE for fuel. `fuel_pct` is deprecated.
         pct = be16(d, 1) * 0.1
         if 0 <= pct <= 100:
+            out["fuel_sender_pct"] = pct
             out["fuel_pct"] = pct
         if len(d) >= 4:
             out["fuel_gauge_update"] = bool(d[3] & 0x80)

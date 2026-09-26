@@ -40,7 +40,7 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Engine RPM** | `0x103` (259) | 8 | ~1.5 kHz | Bytes 2–3 (16-bit BE) | `(raw - 0xE000) * 2.0` | `0` $\rightarrow$ `5000 RPM` (idle ~`1250`) | OBD Engine RPM ($r=0.998$) |
 | **EV Mode Active** | `0x103` (259) | 8 | ~1.5 kHz | Bytes 2–3 | `raw == 0xE000` | `true`, `false` | Electric drive indicator |
 | **Coolant Temperature** | `0x104` (260) | 8 | ~1.5 kHz | Byte 2 | `raw - 60.0` °C | `57.0°C` $\rightarrow$ `86.0°C` | OBD Coolant PID ($r=0.9994$) |
-| **Fuel Tank Level %** | `0x174` (372) | 8 | 2.4 Hz | Bytes 1–2 (16-bit BE) | `raw * 0.1`; reject `0` / `1000` | `100.0%` $\rightarrow$ `85.9%` | OBD Fuel Level ($r=0.9998$) |
+| ~~Fuel Tank Level %~~ (**not tank level**, 0.4.5) | `0x174` (372) | 8 | 2.4 Hz | Bytes 1–2 (16-bit BE) | `raw * 0.1`; reject `0` / `1000` | `100.0%` $\rightarrow$ `85.9%` | OBD Fuel Level ($r=0.9998$) |
 | **Steering Wheel Angle** | `0x175` (373) | 8 | ~1.7 kHz | Bytes 3–4 (16-bit BE) | `(raw - 8192.0) * 0.1` deg | `-900.0°` $\rightarrow$ `+900.0°` | SAS steering sensor |
 | **Tire Pressure FL** | `0x1B5` (437) | 8 | ~1.7 kHz | Byte 1 | `raw * 0.01` bar | `2.35` $\rightarrow$ `2.42 bar` | TPMS Sensor (FL) |
 | **Tire Pressure FR** | `0x1B5` (437) | 8 | ~1.7 kHz | Byte 3 | `raw * 0.01` bar | `2.35` $\rightarrow$ `2.42 bar` | TPMS Sensor (FR) |

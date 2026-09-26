@@ -39,7 +39,7 @@ For continuous physical telemetry (vehicle speed, engine RPM, coolant temperatur
 | **Vehicle Speed** | `0x107` | OBD-II PID 0x0D | **0.99995** | $\pm 0.1\text{ km/h}$ precision |
 | **Engine RPM** | `0x103` | OBD-II PID 0x0C | **0.9980** | Identifies EV mode at raw `0xE000` |
 | **Coolant Temp** | `0x104` | OBD-II PID 0x05 | **0.9994** | Linear scale: $\text{raw} - 60^\circ\text{C}$ |
-| **Fuel Level %** | `0x174` | OBD-II PID 0x2F | **0.9998** | Rejects clamp values 0 / 1000 |
+| ~~Fuel Level %~~ | `0x174` | OBD-II PID 0x2F | ~~0.9998~~ | **Retracted 0.4.5**: near-full tank only; the field is not the tank level |
 | **Trip Distance** | `0x113` | Instrument cluster | **1.0000** | $0.1\text{ km/LSB}$ |
 | **Distance to Empty** | `0x118` | Instrument cluster | **1.0000** | Exact match to dash display |
 
