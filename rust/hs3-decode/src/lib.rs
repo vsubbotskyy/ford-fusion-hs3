@@ -1395,4 +1395,93 @@ mod tests {
         assert_eq!(decode_hv_voltage(&[0xBA, 0xCB, 0x02, 0x38]), Some(284.0));
         assert_eq!(decode_hv_current_gauge(&[0x27, 0x10]), Some(0.0));
     }
+
+    #[test]
+    fn test_steering_angle() {
+        // 0x175 B3:B4 = 0x2000 = 8192 -> centre (0.0°)
+        assert_eq!(decode_steering_angle(&[0, 0, 0, 0x20, 0x00]), Some(0.0));
+        // 0x175 B3:B4 = 0x2064 = 8292 -> (8292 - 8192) * 0.1 = 10.0° right
+        assert_eq!(decode_steering_angle(&[0, 0, 0, 0x20, 0x64]), Some(10.0));
+        // 0x175 B3:B4 = 0x1F9C = 8092 -> (8092 - 8192) * 0.1 = -10.0° left
+        assert_eq!(decode_steering_angle(&[0, 0, 0, 0x1F, 0x9C]), Some(-10.0));
+        // Out of range (>900°) -> None
+        assert_eq!(decode_steering_angle(&[0, 0, 0, 0xFF, 0xFF]), None);
+        // Short frame
+        assert_eq!(decode_steering_angle(&[0, 0, 0, 0x20]), None);
+    }
+
+    #[test]
+    fn test_tire_pressures() {
+        // 0x1B5: B1=220 (2.20 bar), B3=225 (2.25), B5=218 (2.18), B7=230 (2.30)
+        let data = [0x00, 220, 0x00, 225, 0x00, 218, 0x00, 230];
+        let p = decode_tire_pressures(&data).unwrap();
+        assert!((p[0] - 2.20).abs() < 0.01);
+        assert!((p[1] - 2.25).abs() < 0.01);
+        assert!((p[2] - 2.18).abs() < 0.01);
+        assert!((p[3] - 2.30).abs() < 0.01);
+        // Out of range (below 0.5 bar) -> None
+        assert_eq!(decode_tire_pressures(&[0, 10, 0, 10, 0, 10, 0, 10]), None);
+        // Short frame
+        assert_eq!(decode_tire_pressures(&[0, 220, 0, 225, 0, 218, 0]), None);
+    }
+
+    #[test]
+    fn test_fuel_accumulator() {
+        // 0x109 B3:B4 = 0x01 0x00 -> 256 ticks
+        assert_eq!(decode_fuel_accumulator(&[0, 0, 0, 0x01, 0x00]), Some(256));
+        // Zero ticks
+        assert_eq!(decode_fuel_accumulator(&[0, 0, 0, 0x00, 0x00]), Some(0));
+        // Short frame
+        assert_eq!(decode_fuel_accumulator(&[0, 0, 0, 0x01]), None);
+    }
+
+    #[test]
+    fn test_bcm_token() {
+        // 0x100 B0:B1 = 0x12 0x34 -> 0x1234
+        assert_eq!(decode_bcm_token(&[0x12, 0x34]), Some(0x1234));
+        // Zero token -> None (invalid)
+        assert_eq!(decode_bcm_token(&[0x00, 0x00]), None);
+        // Short frame
+        assert_eq!(decode_bcm_token(&[0x12]), None);
+    }
+
+    #[test]
+    fn test_motor_coil_temp() {
+        // 0x141 B2 = 100 -> 100 - 40 = 60.0 °C
+        assert_eq!(decode_motor_coil_temp(&[0, 0, 100]), Some(60.0));
+        // B2 = 40 -> 0.0 °C (minimum valid)
+        assert_eq!(decode_motor_coil_temp(&[0, 0, 40]), Some(0.0));
+        // B2 = 39 -> below offset, None
+        assert_eq!(decode_motor_coil_temp(&[0, 0, 39]), None);
+        // Short frame
+        assert_eq!(decode_motor_coil_temp(&[0, 0]), None);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_hybrid_soc_deprecated() {
+        // 0x108 B0 = 0xA0 (160) -> 160 * 0.5 = 80.0 %
+        assert_eq!(decode_hybrid_soc(&[0xA0]), Some(80.0));
+        // Out of range (< 40%)
+        assert_eq!(decode_hybrid_soc(&[0x20]), None);
+        // Empty frame
+        assert_eq!(decode_hybrid_soc(&[]), None);
+    }
+
+    #[test]
+    fn test_10f_raw() {
+        assert_eq!(decode_10f_raw(&[0x41, 0x8E]), Some(0x418E));
+        assert_eq!(decode_10f_raw(&[0x00, 0x00]), Some(0));
+        // Short frame
+        assert_eq!(decode_10f_raw(&[0x41]), None);
+    }
+
+    #[test]
+    fn test_odometer_trip_alias() {
+        // 0x113 B4:B5 = 0x00 0xA3 -> 163 * 0.1 = 16.3 km -> 16.3 as f64
+        let result = decode_odometer_trip(&[0, 0, 0, 0, 0x00, 0xA3]).unwrap();
+        assert!((result - 16.3).abs() < 0.01);
+        // Short frame
+        assert_eq!(decode_odometer_trip(&[0, 0, 0, 0, 0x00]), None);
+    }
 }
