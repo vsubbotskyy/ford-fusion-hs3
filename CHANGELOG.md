@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.6 — 2026-10-08
+
+### Changed
+- **Domain Module Modularization (`hs3-decode`)**: Decomposed monolithic `lib.rs` into domain-focused submodules (`powertrain`, `body`, `cluster`, `chassis`, `gateway`, `vin`) while preserving 100% backwards compatibility by re-exporting all types and decoders from crate root.
+- **Python Dispatch Table (`hs3_decode.parser`)**: Replaced the 100-branch linear `if/elif` cascade in `parse_frame` with a dictionary-driven `DISPATCH_MAP` architecture.
+
+### Added
+- **Unit Test Coverage (`hs3-decode`)**: Added comprehensive tests for all previously untested Rust decoders (`oil_life`, `gear_selector`, `lamp_mode`, `trip_and_dte`, `remote_start_timer`, `fuel_sender_pct`, `odometer_and_distances`, `vehicle_speed`).
+- **Python Test Suite**: Added unit tests in `python/tests/test_parser.py` validating multi-class signal decoding.
+
 ## 0.4.5 — 2026-09-26
 
 ### Changed
