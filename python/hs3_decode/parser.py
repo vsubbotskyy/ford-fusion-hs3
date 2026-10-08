@@ -92,29 +92,40 @@ def be24(d, o=0):
     return (d[o] << 16) | (d[o + 1] << 8) | d[o + 2]
 
 
-def parse_frame(cid: int, d: list[int]) -> dict:
-    out = {"id": cid, "class": PARSE_CLASS.get(cid, "unknown")}
-    if cid == 0x07A and len(d) >= 4:
+def _decode_07a(d: list[int], out: dict) -> None:
+    if len(d) >= 4:
         raw_i = ((d[0] & 0x7F) << 8) | d[1]
         out["hv_current_a"] = round(raw_i * 0.05 - 750.0, 2)
         out["hv_voltage_v"] = round(((d[2] & 0x03) << 8 | d[3]) * 0.5, 1)
         if len(d) >= 6:
             out["hv_vmax_v"] = d[4] * 2
             out["hv_vmin_v"] = d[5] * 2
-    elif cid == 0x084 and len(d) >= 7:
+
+
+def _decode_084(d: list[int], out: dict) -> None:
+    if len(d) >= 7:
         out["clock"] = f"{d[6]:02d}:{d[4]:02d}:{d[5]:02d}"
         out["calendar_day"] = be16(d, 2)
-    elif cid == 0x100 and len(d) >= 2:
+
+
+def _decode_100(d: list[int], out: dict) -> None:
+    if len(d) >= 2:
         tok = be16(d, 0)
         if tok:
             out["bcm_token"] = tok
         if len(d) >= 7:
             out["hv_battery_temp_c"] = d[6] * 0.5 - 50.0
-    elif cid == 0x101 and len(d) >= 8:
+
+
+def _decode_101(d: list[int], out: dict) -> None:
+    if len(d) >= 8:
         out["brake_pressed"] = bool(d[4] & 0x80)
         out["gear_selector"] = "PRND"[(d[3] >> 4) & 3]
         out["pwrtrain"] = {0xE9: "mixed", 0xEA: "EV", 0xC7: "parked"}.get(d[7], f"0x{d[7]:02X}")
-    elif cid == 0x103 and len(d) >= 4:
+
+
+def _decode_103(d: list[int], out: dict) -> None:
+    if len(d) >= 4:
         raw = be16(d, 2)
         if raw > 0xE000:
             out["rpm"] = (raw - 0xE000) * 2.0
@@ -130,24 +141,32 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             out["ev_mode"] = False
         delta = be16(d, 0) - 0x8000
         out["pedal_pct"] = max(0.0, min(100.0, delta / 5.3)) if delta > 0 else 0.0
-    elif cid == 0x104 and len(d) >= 3:
+
+
+def _decode_104(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         out["coolant_c"] = d[2] - 60.0
         if len(d) >= 6 and (d[5] & 0x7F) <= 100:
             out["oil_life_pct"] = d[5] & 0x7F
         out["alive2"] = d[0] & 3
         if len(d) >= 2:
             out["highrate8"] = d[1]
-    elif cid == 0x105:
-        out["hybrid_mode"] = {0xE0: "OFF", 0xE8: "CITY", 0xF8: "HIGHWAY"}.get(d[0], f"0x{d[0]:02X}")
-        if len(d) >= 3:
-            yn = {1: True, 2: False}
-            if d[1] & 0x80:
-                out["driver_belt_buckled"] = yn.get((d[1] >> 5) & 3)
-            out["passenger_belt_buckled"] = yn.get((d[1] >> 3) & 3)
-            out["passenger_seat_occupied"] = yn.get((d[2] >> 6) & 3)
-        if len(d) >= 7:
-            out["hybrid_strategy"] = {0x64: "CITY", 0x34: "HIGHWAY", 0x60: "PARK"}.get(d[6], f"0x{d[6]:02X}")
-    elif cid == 0x106 and len(d) >= 2:
+
+
+def _decode_105(d: list[int], out: dict) -> None:
+    out["hybrid_mode"] = {0xE0: "OFF", 0xE8: "CITY", 0xF8: "HIGHWAY"}.get(d[0], f"0x{d[0]:02X}")
+    if len(d) >= 3:
+        yn = {1: True, 2: False}
+        if d[1] & 0x80:
+            out["driver_belt_buckled"] = yn.get((d[1] >> 5) & 3)
+        out["passenger_belt_buckled"] = yn.get((d[1] >> 3) & 3)
+        out["passenger_seat_occupied"] = yn.get((d[2] >> 6) & 3)
+    if len(d) >= 7:
+        out["hybrid_strategy"] = {0x64: "CITY", 0x34: "HIGHWAY", 0x60: "PARK"}.get(d[6], f"0x{d[6]:02X}")
+
+
+def _decode_106(d: list[int], out: dict) -> None:
+    if len(d) >= 2:
         raw = ((d[0] & 0x03) << 8) | d[1]
         if not (d[0] == 0x9F and d[1] == 0xFF):
             out["brake_pct"] = round(min(100.0, raw / 10.23), 1)
@@ -163,82 +182,118 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             raw12 = ((d[6] & 0x0F) << 8) | d[7]
             if raw12 != 0xFFE:
                 out["raw12"] = raw12
-    elif cid == 0x107 and len(d) >= 3:
+
+
+def _decode_107(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         out["speed_kmh"] = be16(d, 0) * 0.01
         out["gear"] = {0x60: "P", 0xE0: "D/R/N"}.get(d[2])
-    elif cid == 0x108:
-        out["cabin_temp_c"] = d[0] * 0.5 - 57.0  # candidate
-        pct = d[0] * 0.5
-        if 40.0 <= pct <= 100.0:
-            out["hybrid_soc_pct"] = pct  # deprecated: not SOC, removal in 0.5
-        if len(d) >= 3:
-            names = ("fl", "fr", "rl", "rr")
-            for n, nib in enumerate((d[1] >> 4, d[1] & 0x0F, d[2] >> 4, d[2] & 0x0F), 1):
-                v = (nib >> 1) & 7
-                pct = (v - 1) * 25 if 1 <= v <= 5 else None
-                out[f"window_{names[n - 1]}_open_pct"] = pct
-                out[f"window_{n}_open_pct"] = pct  # deprecated alias, removal in 0.5
-    elif cid == 0x109 and len(d) >= 5:
+
+
+def _decode_108(d: list[int], out: dict) -> None:
+    out["cabin_temp_c"] = d[0] * 0.5 - 57.0  # candidate
+    pct = d[0] * 0.5
+    if 40.0 <= pct <= 100.0:
+        out["hybrid_soc_pct"] = pct  # deprecated: not SOC, removal in 0.5
+    if len(d) >= 3:
+        names = ("fl", "fr", "rl", "rr")
+        for n, nib in enumerate((d[1] >> 4, d[1] & 0x0F, d[2] >> 4, d[2] & 0x0F), 1):
+            v = (nib >> 1) & 7
+            pct = (v - 1) * 25 if 1 <= v <= 5 else None
+            out[f"window_{names[n - 1]}_open_pct"] = pct
+            out[f"window_{n}_open_pct"] = pct  # deprecated alias, removal in 0.5
+
+
+def _decode_109(d: list[int], out: dict) -> None:
+    if len(d) >= 5:
         out["odometer_km"] = be24(d, 0)
         out["fuel_accum"] = be16(d, 3)
         if len(d) >= 7:
             out["odo_companion"] = d[6]
-    elif cid == 0x10A and len(d) >= 3:
+
+
+def _decode_10a(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         out["transaxle"] = {0x39: "P", 0x08: "not-P", 0x09: "not-P-low", 0x38: "stop-38"}.get(d[2], f"0x{d[2]:02X}")
-    elif cid == 0x10C and len(d) >= 7:
+
+
+def _decode_10c(d: list[int], out: dict) -> None:
+    if len(d) >= 7:
         out["thermal_live"] = d[3] == 2 and d[4] == 0xB0
         out["b6_live_band"] = d[6]
         out["component_temp_raw"] = d[0]
-    elif cid == 0x10E:
-        if d[0] == 0x17:
-            out["ignition"] = "ON"
-        elif d[0] == 0x03 and len(d) >= 8 and d[7] == 0:
-            out["ignition"] = "OFF"
-        elif d[0] == 0x03:
-            out["ignition"] = "ON"
-        else:
-            out["ignition"] = "STANDBY"
-        if len(d) >= 8:
-            out["drive_active"] = d[7] != 0
-            out["drive_alt"] = bool(d[4] & 0x20)
-            out["drive_alt_b5"] = bool(d[5] & 0x04)
-            out["slow_analog_b1"] = d[1]
-            out["analog_b3"] = d[3]
-            out["analog_b6"] = d[6]
-            if d[3] == 0:
-                out["b3_zeroes_b6"] = d[6] == 0
-    elif cid == 0x10F and len(d) >= 2:
+
+
+def _decode_10e(d: list[int], out: dict) -> None:
+    if d[0] == 0x17:
+        out["ignition"] = "ON"
+    elif d[0] == 0x03 and len(d) >= 8 and d[7] == 0:
+        out["ignition"] = "OFF"
+    elif d[0] == 0x03:
+        out["ignition"] = "ON"
+    else:
+        out["ignition"] = "STANDBY"
+    if len(d) >= 8:
+        out["drive_active"] = d[7] != 0
+        out["drive_alt"] = bool(d[4] & 0x20)
+        out["drive_alt_b5"] = bool(d[5] & 0x04)
+        out["slow_analog_b1"] = d[1]
+        out["analog_b3"] = d[3]
+        out["analog_b6"] = d[6]
+        if d[3] == 0:
+            out["b3_zeroes_b6"] = d[6] == 0
+
+
+def _decode_10f(d: list[int], out: dict) -> None:
+    if len(d) >= 2:
         out["raw16"] = be16(d, 0)
-    elif cid == 0x110 and len(d) >= 3:
+
+
+def _decode_110(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         out["mg_high"] = d[0]
         valid = len(d) < 4 or (d[3] & 0x80) != 0
         if valid and not (d[0] == 0xFF and d[1] == 0xFF and d[2] == 0xFF):
             out["motor_angle_deg"] = round(((d[1] << 8) | d[2]) * 360 / 65536, 1)
-    elif cid == 0x112 and len(d) >= 5:
-        # B4 counter block initialised (00 no / 03 yes) - NOT motion.
+
+
+def _decode_112(d: list[int], out: dict) -> None:
+    if len(d) >= 5:
         out["ctr_112_init"] = {0x00: False, 0x03: True}.get(d[4])
-        out["tcu_motion"] = out["ctr_112_init"]  # deprecated alias, remove in 0.5
+        out["tcu_motion"] = out["ctr_112_init"]
         if len(d) >= 6:
             out["ctr_112_b5"] = d[5]
-            out["tcu_motion_analog"] = d[5]  # deprecated alias, remove in 0.5
+            out["tcu_motion_analog"] = d[5]
         if len(d) >= 8:
             out["ctr_112_b7"] = d[7]
-            out["tcu_tick"] = d[7]  # deprecated alias, remove in 0.5
-    elif cid == 0x113 and len(d) >= 6:
+            out["tcu_tick"] = d[7]
+
+
+def _decode_113(d: list[int], out: dict) -> None:
+    if len(d) >= 6:
         out["trip_km"] = be16(d, 4) * 0.1
         if len(d) >= 2:
             out["trip_fuel_l"] = round(d[1] * 0.1, 1)
-    elif cid == 0x118 and len(d) >= 7:
+
+
+def _decode_118(d: list[int], out: dict) -> None:
+    if len(d) >= 7:
         out["ice_km"] = be24(d, 0) * 0.1
         out["trip_ice_km"] = be16(d, 3) * 0.1
         out["dte_km"] = be16(d, 5) * 0.1
-    elif cid == 0x11A and len(d) >= 8:
+
+
+def _decode_11a(d: list[int], out: dict) -> None:
+    if len(d) >= 8:
         if d[0] == 0xC1:
             out["vin_chunk"] = d[1]
             out["vin_ascii"] = bytes(d[2:8]).decode("ascii", errors="replace")
         elif d[0] == 0xC0:
             out["vin_alt_mux"] = True
-    elif cid == 0x141 and len(d) >= 3:
+
+
+def _decode_141(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         if d[2] >= 40:
             out["motor_coil_c"] = d[2] - 40
         raw = be16(d, 1)
@@ -253,24 +308,34 @@ def parse_frame(cid: int, d: list[int]) -> dict:
         if len(d) >= 6:
             out["b5_mode"] = d[5] >> 6
             out["b5_analog6"] = d[5] & 0x3F
-    elif cid == 0x142:
-        out["ambient_c"] = d[0] - 64.0
-        if len(d) >= 2:
-            out["raw7"] = d[1] >> 1
-        if len(d) >= 3:
-            ice = {0x64: False, 0x68: True}.get(d[2])
-            if ice is not None:
-                out["ice_running"] = ice
-    elif cid == 0x146:
-        cmd = {0x0C: "LOCK", 0x04: "UNLOCK", 0x01: "REMOTE_START", 0x02: "REMOTE_STOP", 0x00: "IDLE"}.get(d[0], f"0x{d[0]:02X}")
-        out["tcu_cmd"] = cmd
-        if len(d) >= 4:
-            out["seq"] = d[3]
-    elif cid == 0x147 and len(d) >= 3:
+
+
+def _decode_142(d: list[int], out: dict) -> None:
+    out["ambient_c"] = d[0] - 64.0
+    if len(d) >= 2:
+        out["raw7"] = d[1] >> 1
+    if len(d) >= 3:
+        ice = {0x64: False, 0x68: True}.get(d[2])
+        if ice is not None:
+            out["ice_running"] = ice
+
+
+def _decode_146(d: list[int], out: dict) -> None:
+    cmd = {0x0C: "LOCK", 0x04: "UNLOCK", 0x01: "REMOTE_START", 0x02: "REMOTE_STOP", 0x00: "IDLE"}.get(d[0], f"0x{d[0]:02X}")
+    out["tcu_cmd"] = cmd
+    if len(d) >= 4:
+        out["seq"] = d[3]
+
+
+def _decode_147(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         out["remote_start_s"] = be16(d, 1)
         if len(d) >= 6:
             out["lamp_mode"] = {0: "OFF", 1: "LOW_BEAM", 2: "PARKING", 3: "DRL_RIGHT_OFF", 4: "DRL_LEFT_OFF", 5: "DRL"}.get(d[5] >> 5, "UNKNOWN")
-    elif cid == 0x153 and len(d) >= 6:
+
+
+def _decode_153(d: list[int], out: dict) -> None:
+    if len(d) >= 6:
         raw = be16(d, 4)
         if 0 < raw < 1000:
             mpg = raw * 0.1
@@ -278,75 +343,140 @@ def parse_frame(cid: int, d: list[int]) -> dict:
             l100 = 235.214583 / mpg
             if 1.5 <= l100 <= 30:
                 out["trip_l100km"] = round(l100, 1)
-    elif cid == 0x15E:
-        mux = d[0]
-        out["mux"] = mux
-        if mux == 0x01 and len(d) >= 6 and d[1] <= 23 and d[2] <= 59 and d[3] <= 59:
-            out["clock_utc"] = f"{d[1]:02d}:{d[2]:02d}:{d[3]:02d}"
-            out["clock"] = out["clock_utc"]
-            if 1 <= d[5] <= 12 and 1 <= d[4] <= 31:
-                out["date_utc"] = f"{d[4]:02d}-{d[5]:02d}"
-        elif mux in (0x16, 0x76, 0x86) and len(d) >= 7:
-            lat_fine = (d[3] - 128) * 1e-6 if len(d) >= 4 else 0.0
-            lat = 43.6591 + be16(d, 1) * 0.000256034 + lat_fine
-            lon = 5.0 + be16(d, 5) * 0.000016
-            out["lat"] = round(lat, 6)
-            out["lon"] = round(lon, 6)
-    elif cid == 0x174 and len(d) >= 3:
-        # B1:B2 is NOT the tank level (0.4.5): 100.0 sentinel most of the time,
-        # short 70-99 % bursts. Use 0x118 DTE for fuel. `fuel_pct` is deprecated.
+
+
+def _decode_15e(d: list[int], out: dict) -> None:
+    mux = d[0]
+    out["mux"] = mux
+    if mux == 0x01 and len(d) >= 6 and d[1] <= 23 and d[2] <= 59 and d[3] <= 59:
+        out["clock_utc"] = f"{d[1]:02d}:{d[2]:02d}:{d[3]:02d}"
+        out["clock"] = out["clock_utc"]
+        if 1 <= d[5] <= 12 and 1 <= d[4] <= 31:
+            out["date_utc"] = f"{d[4]:02d}-{d[5]:02d}"
+    elif mux in (0x16, 0x76, 0x86) and len(d) >= 7:
+        lat_fine = (d[3] - 128) * 1e-6 if len(d) >= 4 else 0.0
+        lat = 43.6591 + be16(d, 1) * 0.000256034 + lat_fine
+        lon = 5.0 + be16(d, 5) * 0.000016
+        out["lat"] = round(lat, 6)
+        out["lon"] = round(lon, 6)
+
+
+def _decode_174(d: list[int], out: dict) -> None:
+    if len(d) >= 3:
         pct = be16(d, 1) * 0.1
         if 0 <= pct <= 100:
             out["fuel_sender_pct"] = pct
             out["fuel_pct"] = pct
         if len(d) >= 4:
             out["fuel_gauge_update"] = bool(d[3] & 0x80)
-    elif cid == 0x175 and len(d) >= 5:
+
+
+def _decode_175(d: list[int], out: dict) -> None:
+    if len(d) >= 5:
         out["steer_deg"] = (be16(d, 3) - 8192) * 0.1
-    elif cid == 0x1B3:
-        out["doors_locked"] = not bool((d[0] >> 2) & 1)
-        out["trunk_ajar"] = bool(d[0] & 1)
-        out["rear_fog"] = bool((d[0] >> 1) & 1)
-        if len(d) >= 2:
-            out["headlights"] = bool(d[1] & 0x08)
-            day_night = (d[1] >> 6) & 0x03
-            if day_night in (1, 2):
-                out["day_night"] = "DAY" if day_night == 1 else "NIGHT"
-        if len(d) >= 6:
-            out["ambient_light"] = d[5]
-        if len(d) >= 8:
-            left = bool(d[1] & 0x01)
-            right = bool((d[7] >> 6) & 0x01)
-            out["turn_left"] = left
-            out["turn_right"] = right
-            out["hazards"] = left and right
-            out["turn_signal"] = (
-                "HAZARD" if left and right
-                else "LEFT" if left
-                else "RIGHT" if right
-                else "OFF"
-            )
-            out["turn_signal_active"] = left or right
-            left_bulb = bool((d[1] >> 1) & 1)
-            right_bulb = bool((d[7] >> 7) & 1)
-            out["flasher_bulb_on"] = left_bulb or right_bulb
-            out["courtesy_flash"] = left_bulb and right_bulb and not (left and right)
-            out["front_fog"] = bool(d[7] & 1)
-            out["hood_ajar"] = bool((d[7] >> 3) & 1)
-            out["door_ajar_fl"] = bool((d[7] >> 5) & 1)
-            out["door_ajar_fr"] = bool((d[7] >> 4) & 1)
-            out["door_ajar_rl"] = bool(d[6] & 1)
-            out["door_ajar_rr"] = bool((d[6] >> 1) & 1)
-    elif cid == 0x1B5 and len(d) >= 8:
+
+
+def _decode_1b3(d: list[int], out: dict) -> None:
+    out["doors_locked"] = not bool((d[0] >> 2) & 1)
+    out["trunk_ajar"] = bool(d[0] & 1)
+    out["rear_fog"] = bool((d[0] >> 1) & 1)
+    if len(d) >= 2:
+        out["headlights"] = bool(d[1] & 0x08)
+        day_night = (d[1] >> 6) & 0x03
+        if day_night in (1, 2):
+            out["day_night"] = "DAY" if day_night == 1 else "NIGHT"
+    if len(d) >= 6:
+        out["ambient_light"] = d[5]
+    if len(d) >= 8:
+        left = bool(d[1] & 0x01)
+        right = bool((d[7] >> 6) & 0x01)
+        out["turn_left"] = left
+        out["turn_right"] = right
+        out["hazards"] = left and right
+        out["turn_signal"] = (
+            "HAZARD" if left and right
+            else "LEFT" if left
+            else "RIGHT" if right
+            else "OFF"
+        )
+        out["turn_signal_active"] = left or right
+        left_bulb = bool((d[1] >> 1) & 1)
+        right_bulb = bool((d[7] >> 7) & 1)
+        out["flasher_bulb_on"] = left_bulb or right_bulb
+        out["courtesy_flash"] = left_bulb and right_bulb and not (left and right)
+        out["front_fog"] = bool(d[7] & 1)
+        out["hood_ajar"] = bool((d[7] >> 3) & 1)
+        out["door_ajar_fl"] = bool((d[7] >> 5) & 1)
+        out["door_ajar_fr"] = bool((d[7] >> 4) & 1)
+        out["door_ajar_rl"] = bool(d[6] & 1)
+        out["door_ajar_rr"] = bool((d[6] >> 1) & 1)
+
+
+def _decode_1b5(d: list[int], out: dict) -> None:
+    if len(d) >= 8:
         out["tpms_bar"] = [round(d[i] * 0.01, 2) for i in (1, 3, 5, 7)]
-    elif cid == 0x22A and len(d) >= 8:
+
+
+def _decode_22a(d: list[int], out: dict) -> None:
+    if len(d) >= 8:
         out["tcu_active"] = d[7] == 1
-    elif cid == 0x27C:
-        out["tcu_27c"] = "CMD" if d[:2] == [0x16, 0x60] else "IDLE"
-    elif cid == 0x590:
-        out["nm"] = "TCU_WAKE"
-    elif cid == 0x59E:
-        out["nm"] = "GWM_NM"
+
+
+def _decode_27c(d: list[int], out: dict) -> None:
+    out["tcu_27c"] = "CMD" if d[:2] == [0x16, 0x60] else "IDLE"
+
+
+def _decode_590(d: list[int], out: dict) -> None:
+    out["nm"] = "TCU_WAKE"
+
+
+def _decode_59e(d: list[int], out: dict) -> None:
+    out["nm"] = "GWM_NM"
+
+
+DECODERS = {
+    0x07A: _decode_07a,
+    0x084: _decode_084,
+    0x100: _decode_100,
+    0x101: _decode_101,
+    0x103: _decode_103,
+    0x104: _decode_104,
+    0x105: _decode_105,
+    0x106: _decode_106,
+    0x107: _decode_107,
+    0x108: _decode_108,
+    0x109: _decode_109,
+    0x10A: _decode_10a,
+    0x10C: _decode_10c,
+    0x10E: _decode_10e,
+    0x10F: _decode_10f,
+    0x110: _decode_110,
+    0x112: _decode_112,
+    0x113: _decode_113,
+    0x118: _decode_118,
+    0x11A: _decode_11a,
+    0x141: _decode_141,
+    0x142: _decode_142,
+    0x146: _decode_146,
+    0x147: _decode_147,
+    0x153: _decode_153,
+    0x15E: _decode_15e,
+    0x174: _decode_174,
+    0x175: _decode_175,
+    0x1B3: _decode_1b3,
+    0x1B5: _decode_1b5,
+    0x22A: _decode_22a,
+    0x27C: _decode_27c,
+    0x590: _decode_590,
+    0x59E: _decode_59e,
+}
+
+
+def parse_frame(cid: int, d: list[int]) -> dict:
+    out = {"id": cid, "class": PARSE_CLASS.get(cid, "unknown")}
+    decoder = DECODERS.get(cid)
+    if decoder is not None:
+        decoder(d, out)
     return out
 
 
