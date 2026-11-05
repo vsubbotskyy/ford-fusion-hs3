@@ -414,6 +414,7 @@ def _decode_1b3(d: list[int], out: dict) -> None:
 
 def _decode_1b5(d: list[int], out: dict) -> None:
     if len(d) >= 8:
+        out["tpms_status"] = [d[i] for i in (0, 2, 4, 6)]
         out["tpms_bar"] = [round(d[i] * 0.01, 2) for i in (1, 3, 5, 7)]
 
 

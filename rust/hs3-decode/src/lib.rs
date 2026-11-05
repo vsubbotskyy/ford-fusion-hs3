@@ -444,6 +444,15 @@ mod tests {
         assert_eq!(decode_tire_pressures(&[0, 10, 0, 10, 0, 10, 0, 10]), None);
         // Short frame
         assert_eq!(decode_tire_pressures(&[0, 220, 0, 225, 0, 218, 0]), None);
+
+        // Status bytes & individual pressures: RR dropout (01 02)
+        let dropout = [0x00, 230, 0x00, 235, 0x00, 225, 0x01, 0x02];
+        assert_eq!(decode_tpms_status(&dropout), Some([0, 0, 0, 1]));
+        let ind = decode_individual_tire_pressures(&dropout).unwrap();
+        assert!(ind[0].is_some());
+        assert!(ind[1].is_some());
+        assert!(ind[2].is_some());
+        assert_eq!(ind[3], None);
     }
 
     #[test]

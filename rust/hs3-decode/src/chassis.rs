@@ -82,3 +82,22 @@ pub fn decode_tire_pressures(data: &[u8]) -> Option<[f32; 4]> {
     }
 }
 
+/// 0x1B5 Bytes 0, 2, 4, 6 (TPMS Sensor Status: 0 = OK, 1 = uninitialized / searching / no signal)
+/// Returns: [FL, FR, RL, RR]
+pub fn decode_tpms_status(data: &[u8]) -> Option<[u8; 4]> {
+    if data.len() < 8 { return None; }
+    Some([data[0], data[2], data[4], data[6]])
+}
+
+/// 0x1B5 Bytes 1, 3, 5, 7: individual tire pressures in bar, with None for uninitialized (<0.5 or >5.0 bar)
+/// Returns: [FL, FR, RL, RR]
+pub fn decode_individual_tire_pressures(data: &[u8]) -> Option<[Option<f32>; 4]> {
+    if data.len() < 8 { return None; }
+    let parse = |b: u8| {
+        let p = (b as f32) * 0.01;
+        if (0.5..5.0).contains(&p) { Some(p) } else { None }
+    };
+    Some([parse(data[1]), parse(data[3]), parse(data[5]), parse(data[7])])
+}
+
+
