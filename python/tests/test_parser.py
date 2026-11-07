@@ -138,9 +138,10 @@ class TestHs3Parser(unittest.TestCase):
         self.assertEqual(dec.get("pct_0_100"), 50)
         self.assertEqual(dec.get("b5_mode"), 2)
 
-        # 0x142: Ambient temp & ICE status
+        # 0x142: ICE status (B0 is not the outside temperature)
         dec = parse_frame(0x142, [84, 0x10, 0x68])
-        self.assertEqual(dec.get("ambient_c"), 20.0)
+        self.assertIsNone(dec.get("ambient_c"))
+        self.assertEqual(dec.get("b0_raw"), 84)
         self.assertEqual(dec.get("raw7"), 8)
         self.assertTrue(dec.get("ice_running"))
 

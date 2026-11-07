@@ -39,7 +39,7 @@ BO_ 260 Msg_0x104: 8 Gateway
  SG_ Alive_2bit : 1|2@0+ (1,0) [0|3] "" Vector__XXX
  SG_ HighRate8 : 15|8@0+ (1,0) [0|255] "" Vector__XXX
  SG_ Engine_Coolant_Temp : 23|8@0+ (1.0,-60) [-40|140] "degC" Vector__XXX
- SG_ HeatSoak_Analog : 39|8@0+ (1,0) [50|90] "" Vector__XXX
+ SG_ Outside_Air_Temp : 39|8@0+ (0.25,0) [0|63.5] "degC" Vector__XXX
  SG_ Engine_Oil_Life : 46|7@0+ (1,0) [0|100] "%" Vector__XXX
  SG_ B5_Live_Flag : 47|1@0+ (1,0) [0|1] "" Vector__XXX
 
@@ -123,7 +123,7 @@ BO_ 321 Msg_0x141: 8 Gateway
  SG_ TempLike_B7 : 63|8@0+ (1,0) [40|98] "" Vector__XXX
 
 BO_ 322 Msg_0x142: 8 Gateway
- SG_ Ambient_Temp : 7|8@0+ (1,-64) [-20|50] "degC" Vector__XXX
+ SG_ Unknown_B0 : 7|8@0+ (1,0) [0|255] "" Vector__XXX
  SG_ Analog7 : 15|7@0+ (1,0) [0|127] "" Vector__XXX
  SG_ ICE_Running : 23|8@0+ (1,0) [0|255] "" Vector__XXX
 
@@ -194,6 +194,8 @@ CM_ SG_ 372 Fuel_Sender_Pct "B1:B2 BE * 0.1 %. NOT the tank level: 1000 sentinel
 CM_ SG_ 372 Fuel_Sender_Ok "B3 bits 0-1. Always 3 in every capture. Likely sender OK / data valid.";
 CM_ SG_ 372 Fuel_Gauge_Update "B3 bit 7. NOT the low-fuel lamp. 1-5 s strobe at <7 km/h when filtered % commits. Real lamp unmapped — see docs/signals.md.";
 CM_ SG_ 322 ICE_Running "0x64 = EV, 0x68 = ICE running.";
+CM_ SG_ 322 Unknown_B0 "Not outside temperature (retracted 2026-11-07): 0x4E whenever parked, swings 0x44-0x57 while driving.";
+CM_ SG_ 260 Outside_Air_Temp "CANDIDATE 2026-11-07: within ~1 degC of OBD Outside Temperature in 4 paired drives (10-23 degC seen). Below 0 degC unknown.";
 CM_ SG_ 261 Hybrid_Mode "0xE0 parked, 0xE8 city/EV-heavy, 0xF8 highway.";
 CM_ SG_ 339 Trip_Avg_Mpg "Native 0.1 US mpg/LSB. Metric conversion: L/100 km = 235.215 / mpg.";
 CM_ SG_ 274 Ctr_112_Init "B4 00 = counter block not initialised, 03 = initialised (B4:B5 >= 768). Latches 2-3 min into a drive. NOT motion. Formerly TCU_Motion.";

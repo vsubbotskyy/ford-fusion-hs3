@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- **Outside temperature** is `0x104` B4, °C = raw / 4 (`decode_outside_temp`, Python `outside_c`,
+  DBC `Outside_Air_Temp`; candidate). Within ~1 °C of OBD "Outside Temperature" minute by minute
+  in all four paired drives (12–23 °C); the first minute after a wake can read warm. Below 0 °C unseen.
+  The DBC had this byte as `HeatSoak_Analog`.
+
+### Deprecated
+- `decode_ambient_temp` (`0x142` B0 − 64) and Python `ambient_c`: not the outside temperature. The byte
+  is exactly `0x4E` (= 14 °C) whenever parked and swings 4–23 within one drive while OBD moves < 2 °C;
+  the original match was a single 13 °C morning. DBC signal renamed `Unknown_B0`.
+
 ## 0.4.6 — 2026-10-08
 
 ### Changed

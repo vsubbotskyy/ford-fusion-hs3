@@ -342,9 +342,18 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_ambient_temp() {
         assert_eq!(decode_ambient_temp(&[0x4E]), Some(14.0));
         assert_eq!(decode_ambient_temp(&[0x40]), Some(0.0));
+    }
+
+    #[test]
+    fn test_outside_temp_104() {
+        assert_eq!(decode_outside_temp(&[0x02, 0x10, 0x6E, 0xF6, 0x5D, 0x3A]), Some(23.25));
+        assert_eq!(decode_outside_temp(&[0x02, 0x10, 0x6E, 0xF6, 0x32]), Some(12.5));
+        assert_eq!(decode_outside_temp(&[0x02, 0x10, 0x6E, 0xF6, 0x00]), None);
+        assert_eq!(decode_outside_temp(&[0x02, 0x10, 0x6E, 0xF6]), None);
     }
 
     #[test]

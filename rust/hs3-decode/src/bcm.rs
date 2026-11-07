@@ -276,8 +276,11 @@ pub fn decode_window_positions(data: &[u8]) -> Option<WindowPositions> {
     Some(WindowPositions { front_left, front_right, rear_left, rear_right })
 }
 
-/// 0x142 Byte 0: ambient air temperature, °C = raw − 64.
-/// Mean 13.8 °C vs OBD outside 13 °C on the 2026-09-09 morning drive.
+/// 0x142 Byte 0 as raw − 64. **Not the outside temperature** (retracted 2026-11-07): it is
+/// exactly `0x4E` (= 14) in every parked capture and swings 4–23 within one drive while OBD
+/// outside temperature moves < 2 °C. The old match was one morning at 13 °C. Use
+/// [`decode_outside_temp`] (`0x104` B4).
+#[deprecated(since = "0.4.7", note = "0x142 B0 is not the outside temperature; use decode_outside_temp (0x104 B4)")]
 pub fn decode_ambient_temp(data: &[u8]) -> Option<f32> {
     let raw = *data.first()?;
     let temp = (raw as f32) - 64.0;

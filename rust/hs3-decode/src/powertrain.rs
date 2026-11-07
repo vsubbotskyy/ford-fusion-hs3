@@ -100,6 +100,20 @@ pub fn decode_oil_life(data: &[u8]) -> Option<u8> {
     if pct <= 100 { Some(pct) } else { None }
 }
 
+/// 0x104 Byte 4: outside air temperature, °C = raw / 4 (CANDIDATE, 2026-11-07).
+///
+/// Matches OBD "Outside Temperature" in all four paired captures, within ~1 °C minute by
+/// minute (09-10 drive 23.3 → 19.5 vs 23 → 19). The first minute after a wake can read warm.
+/// Only 10–23 °C seen so far; below 0 °C is unknown, so 0 and 0xFF are dropped.
+/// Was labelled "heat-soak analog" in the DBC.
+pub fn decode_outside_temp(data: &[u8]) -> Option<f32> {
+    let raw = *data.get(4)?;
+    if raw == 0 || raw == 0xFF {
+        return None;
+    }
+    Some(raw as f32 / 4.0)
+}
+
 /// 0x104 Byte 2 (Engine Coolant Temperature: raw - 60.0 °C) — Verified r=0.9994
 pub fn decode_coolant_temp(data: &[u8]) -> Option<f32> {
     if data.len() < 3 { return None; }

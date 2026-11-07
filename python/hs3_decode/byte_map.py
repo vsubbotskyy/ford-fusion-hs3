@@ -86,7 +86,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _s("high-rate 8-bit aliased ~1 Hz; full 256 unique; Δ≈90/sample; not gated to 0 when B3=02"),
         _s("coolant C = raw-60"),
         _f("0xF6 live / 02 off"),
-        _s("heat-soak analog 50-90; parked ~82-90, driving ~50-76 (not ambient)"),
+        _s("outside air C = raw/4 (CANDIDATE; within ~1 C of OBD outside in 4 drives)"),
         _s("bits 6:0 engine oil life % (PCM EngOilLife_Pc_Actl); bit7 live/run flag"),
         _f("0x20 live / 00 off"),
         _pad(0),
@@ -244,7 +244,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _s("temp-like analog 40-98; tracks B3 MAE~1.7 (not 0x104 coolant)"),
     ],
     0x142: [
-        _s("ambient C = raw-64"),
+        _s("unknown; 0x4E whenever parked, 0x44-0x57 driving (NOT outside temp)"),
         _s("7-bit analog (bit0 always 0); SI unknown"),
         _s("64=EV 68=ICE"),
         _f("B3 5F/3F/9F status"),

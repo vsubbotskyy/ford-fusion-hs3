@@ -62,7 +62,8 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Motor coil temp** | `0x141` (321) | 8 | 2.4 Hz | Byte 2 | `raw - 40` | °C | Motor coil temperature |
 | **UTC wall clock** | `0x15E` (350) | 8 | 1 Hz | mux `0x01`: B1 h, B2 m, B3 s, B4 day, B5 month | binary | UTC | UTC wall clock broadcast |
 | **Hybrid battery SOC** | `0x108` (264) | 8 | ~1 Hz† | Byte 0 | `raw * 0.5` % | 75–84 % | Same 0.5 %/LSB as BECM UDS 0x0101 |
-| **Ambient air temp** | `0x142` (322) | 8 | ~1 Hz† | Byte 0 | `raw - 64` °C | ~14 °C | OBD Outside Temp |
+| **Outside air temp** (candidate) | `0x104` (260) | 8 | — | Byte 4 | `raw / 4` °C | 10–23 °C seen | within ~1 °C of OBD Outside Temp, 4 drives (2026-11-07) |
+| ~~Ambient air temp~~ | `0x142` (322) | 8 | ~1 Hz† | Byte 0 | ~~`raw - 64` °C~~ | `0x4E` parked | ❌ retracted 2026-11-07: constant when parked, 4–23 swing while driving |
 | **ICE running (HS3)** | `0x142` (322) | 8 | ~1 Hz† | Byte 2 | `0x64`=EV, `0x68`=ICE | EV vs ICE | Correlates with `0x103` RPM |
 | **Gateway GPS lat** | `0x15E` mux `0x16/76/86` | 8 | ~1 Hz | Bytes 1–2 BE + B3 fine | `43.6591 + raw * 0.000256034 + (B3-128)*1e-6` | Regional coordinate | GPS R²=1.000; B3 fine MAE 6.0 m |
 | **Gateway GPS lon** | `0x15E` mux `0x16/76/86` | 8 | ~1 Hz | Bytes 5–6 BE | `5.0 + raw * 0.000016` | Regional coordinate | GPS R²=1.000, MAE 2.5 m |

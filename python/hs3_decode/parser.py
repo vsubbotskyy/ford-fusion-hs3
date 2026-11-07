@@ -149,6 +149,8 @@ def _decode_104(d: list[int], out: dict) -> None:
         if len(d) >= 6 and (d[5] & 0x7F) <= 100:
             out["oil_life_pct"] = d[5] & 0x7F
         out["alive2"] = d[0] & 3
+        if len(d) >= 5 and d[4] not in (0, 0xFF):
+            out["outside_c"] = d[4] / 4.0
         if len(d) >= 2:
             out["highrate8"] = d[1]
 
@@ -311,7 +313,8 @@ def _decode_141(d: list[int], out: dict) -> None:
 
 
 def _decode_142(d: list[int], out: dict) -> None:
-    out["ambient_c"] = d[0] - 64.0
+    # B0 is not the outside temperature (0x4E whenever parked); kept raw. See 0x104 outside_c.
+    out["b0_raw"] = d[0]
     if len(d) >= 2:
         out["raw7"] = d[1] >> 1
     if len(d) >= 3:
