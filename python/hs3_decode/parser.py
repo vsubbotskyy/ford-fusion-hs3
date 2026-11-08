@@ -145,7 +145,8 @@ def _decode_103(d: list[int], out: dict) -> None:
 
 def _decode_104(d: list[int], out: dict) -> None:
     if len(d) >= 3:
-        out["coolant_c"] = d[2] - 60.0
+        if -40.0 <= d[2] - 60.0 <= 140.0:  # same gate as Rust decode_coolant_temp
+            out["coolant_c"] = d[2] - 60.0
         if len(d) >= 6 and (d[5] & 0x7F) <= 100:
             out["oil_life_pct"] = d[5] & 0x7F
         out["alive2"] = d[0] & 3
@@ -188,7 +189,9 @@ def _decode_106(d: list[int], out: dict) -> None:
 
 def _decode_107(d: list[int], out: dict) -> None:
     if len(d) >= 3:
-        out["speed_kmh"] = be16(d, 0) * 0.01
+        speed = be16(d, 0) * 0.01
+        if speed < 260.0:  # same gate as Rust decode_vehicle_speed
+            out["speed_kmh"] = speed
         out["gear"] = {0x60: "P", 0xE0: "D/R/N"}.get(d[2])
 
 
@@ -208,7 +211,8 @@ def _decode_108(d: list[int], out: dict) -> None:
 
 def _decode_109(d: list[int], out: dict) -> None:
     if len(d) >= 5:
-        out["odometer_km"] = be24(d, 0)
+        if 50_000 <= be24(d, 0) <= 2_000_000:  # same gate as Rust decode_odometer
+            out["odometer_km"] = be24(d, 0)
         out["fuel_accum"] = be16(d, 3)
         if len(d) >= 7:
             out["odo_companion"] = d[6]
@@ -237,7 +241,8 @@ def _decode_10e(d: list[int], out: dict) -> None:
         out["ignition"] = "STANDBY"
     if len(d) >= 8:
         out["drive_active"] = d[7] != 0
-        out["drive_alt"] = bool(d[4] & 0x20)
+        out["drive_alt"] = d[7] == 0xA0  # Rust decode_drive_alt
+        out["drive_alt_b4"] = bool(d[4] & 0x20)  # raw bit; equals drive_alt on every capture
         out["drive_alt_b5"] = bool(d[5] & 0x04)
         out["slow_analog_b1"] = d[1]
         out["analog_b3"] = d[3]
@@ -280,7 +285,8 @@ def _decode_113(d: list[int], out: dict) -> None:
 
 def _decode_118(d: list[int], out: dict) -> None:
     if len(d) >= 7:
-        out["ice_km"] = be24(d, 0) * 0.1
+        if be24(d, 0) > 0:  # same gate as Rust decode_hybrid_ice_km
+            out["ice_km"] = be24(d, 0) * 0.1
         out["trip_ice_km"] = be16(d, 3) * 0.1
         out["dte_km"] = be16(d, 5) * 0.1
 
@@ -366,8 +372,9 @@ def _decode_15e(d: list[int], out: dict) -> None:
 
 def _decode_174(d: list[int], out: dict) -> None:
     if len(d) >= 3:
-        pct = be16(d, 1) * 0.1
-        if 0 <= pct <= 100:
+        raw = be16(d, 1)
+        pct = raw * 0.1
+        if raw not in (0, 1000) and 0 <= pct <= 100:  # same gate as Rust decode_fuel_sender_pct
             out["fuel_sender_pct"] = pct
             out["fuel_pct"] = pct
         if len(d) >= 4:
@@ -376,7 +383,9 @@ def _decode_174(d: list[int], out: dict) -> None:
 
 def _decode_175(d: list[int], out: dict) -> None:
     if len(d) >= 5:
-        out["steer_deg"] = (be16(d, 3) - 8192) * 0.1
+        steer = (be16(d, 3) - 8192) * 0.1
+        if -900.0 <= steer <= 900.0:  # same gate as Rust decode_steering_angle
+            out["steer_deg"] = steer
 
 
 def _decode_1b3(d: list[int], out: dict) -> None:

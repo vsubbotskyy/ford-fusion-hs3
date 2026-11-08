@@ -92,11 +92,17 @@ class TestHs3Parser(unittest.TestCase):
         self.assertEqual(dec.get("component_temp_raw"), 45)
 
         # 0x10E: Ignition & drive
-        dec = parse_frame(0x10E, [0x17, 0, 0, 0, 0x20, 0x04, 0, 1])
+        # On the car B4 bit 5 and B5 bit 2 are set exactly when B7 == 0xA0.
+        dec = parse_frame(0x10E, [0x17, 0, 0, 0, 0x20, 0x04, 0, 0xA0])
         self.assertEqual(dec.get("ignition"), "ON")
         self.assertTrue(dec.get("drive_active"))
         self.assertTrue(dec.get("drive_alt"))
+        self.assertTrue(dec.get("drive_alt_b4"))
         self.assertTrue(dec.get("drive_alt_b5"))
+        # drive_alt follows Rust decode_drive_alt (B7 == 0xA0), not the raw B4 bit.
+        dec = parse_frame(0x10E, [0x17, 0, 0, 0, 0x20, 0x04, 0, 1])
+        self.assertFalse(dec.get("drive_alt"))
+        self.assertTrue(dec.get("drive_alt_b4"))
 
         # 0x10F: Raw16
         dec = parse_frame(0x10F, [0x12, 0x34])

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Rust ↔ Python parity test**: `rust/hs3-decode/tests/parity.rs` writes `testdata/parity/vectors.txt`
+  (45 decoders × 122 deterministic payloads); `python/tests/test_parity.py` checks `parse_frame`
+  against the same file, so the two implementations cannot drift apart silently.
+
+### Fixed
+- **Python plausibility gates now match Rust**: `coolant_c` (−40…140 °C), `speed_kmh` (< 260),
+  `steer_deg` (±900°), `odometer_km` (50 000…2 000 000), `ice_km` (raw > 0) and `fuel_sender_pct` /
+  `fuel_pct` (raw 0 and 1000 = no reading) are left out instead of reporting impossible values.
+- **Python `drive_alt`** is `0x10E` B7 == `0xA0`, as Rust `decode_drive_alt`. It was B4 bit 5; that
+  bit is now `drive_alt_b4`. Identical on every capture, different only on payloads the car does not send.
+
 ## 0.4.7 — 2026-11-08
 
 ### Added
