@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.4.7 — 2026-11-08
+
+### Added
+- **TPMS Sensor Status & Independent Pressures (`hs3-decode`)**: Added `decode_tpms_status` (`0x1B5` bytes 0, 2, 4, 6) returning `[FL, FR, RL, RR]` sensor status (0=OK, 1=uninitialized / searching / no signal) and `decode_individual_tire_pressures` returning `[Option<f32>; 4]` in bar so single wheel sensor dropouts do not discard remaining valid readings. Also exposed `tpms_status` in Python parser.
 
 ### Fixed
 - **Outside temperature** is `0x104` B4, °C = raw / 4 (`decode_outside_temp`, Python `outside_c`,
