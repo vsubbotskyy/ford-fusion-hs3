@@ -35,9 +35,13 @@ class TestHs3Parser(unittest.TestCase):
         self.assertTrue(dec["driver_belt_buckled"])
         self.assertTrue(dec["passenger_belt_buckled"])
         self.assertTrue(dec["passenger_seat_occupied"])
+        self.assertFalse(dec["pre_collision_active"])
+        dec_active = parse_frame(0x105, [0xE8, 0xA8, 0x40, 0x19, 0xFF, 0xB2, 0x64, 0x8C])
+        self.assertTrue(dec_active["pre_collision_active"])
         dec = parse_frame(0x105, [0xE0, 0xF8, 0xC0, 0x08, 0, 0x10, 0x60, 0x08])
         self.assertIsNone(dec["driver_belt_buckled"])
         self.assertIsNone(dec["passenger_seat_occupied"])
+        self.assertFalse(dec["pre_collision_active"])
 
     def test_load_and_parse_synthetic_csv(self):
         csv_path = Path(__file__).resolve().parents[2] / "testdata" / "synthetic_sample.csv"

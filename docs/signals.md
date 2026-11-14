@@ -95,6 +95,16 @@ A P→D turn of the dial passes R and N within ~0.4 s. Decoder: `decode_gear_sel
 
 B1 bit 7 = valid (0 briefly after ignition on). Decoder: `decode_restraints` → `Restraints`.
 
+### Pre-collision assist active — `0x105` B3 bit 4
+
+| Raw | State |
+|---|---|
+| 0 (`0x09` driving / `0x08` parked) | Inactive / normal driving |
+| 1 (`0x19`) | Pre-Collision Assist / active braking intervention active |
+
+Decoder: `decode_pre_collision_active` → `Option<bool>`.
+Forwarded by Gateway Module (GWM) from active safety / ABS arbitration. Observed 2026-11-14 during autonomous deceleration event.
+
 ---
 
 ## Not on this tap

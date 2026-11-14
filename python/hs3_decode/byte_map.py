@@ -95,7 +95,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
         _s("hybrid mode E0 parked / E8 city / F8 highway"),
         _f("bit7 valid; bits 6:5 driver belt, bits 4:3 passenger belt (1=buckled 2=no 3=init)"),
         _f("bits 7:6 passenger seat occupied (1=yes 2=no 3=init)"),
-        _f("09 typical live / 08 00 parked"),
+        _f("bit4 pre-collision active (0x19 active, 0x09 typical live / 08 00 parked)"),
         _f("FF typical live / 00 parked"),
         _f("B2 typical live / 10 parked"),
         _f("64 city with E8 / 34 highway with F8 / 60 parked with E0"),

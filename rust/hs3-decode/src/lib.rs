@@ -155,6 +155,24 @@ mod tests {
     }
 
     #[test]
+    fn test_pre_collision_active() {
+        // Normal driving frame: B3 = 0x09
+        let normal = [0xE8, 0xA8, 0x40, 0x09, 0xFF, 0xB2, 0x64, 0x8C];
+        assert_eq!(decode_pre_collision_active(&normal), Some(false));
+
+        // Active collision warning / intervention: B3 = 0x19 (bit 4 set)
+        let active = [0xE8, 0xA8, 0x40, 0x19, 0xFF, 0xB2, 0x64, 0x8C];
+        assert_eq!(decode_pre_collision_active(&active), Some(true));
+
+        // Parked frame: B3 = 0x08
+        let parked = [0xE0, 0xF8, 0xC0, 0x08, 0x00, 0x10, 0x60, 0x08];
+        assert_eq!(decode_pre_collision_active(&parked), Some(false));
+
+        // Too short frame
+        assert_eq!(decode_pre_collision_active(&[0xE8, 0xA8, 0x40]), None);
+    }
+
+    #[test]
     fn test_lamp_mode() {
         // Real frames from the corpus (B5 is the 6th byte).
         let f = |b5: u8| [0x22, 0x00, 0x00, 0x00, 0x04, b5, 0x00, 0x00];

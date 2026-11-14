@@ -164,6 +164,8 @@ def _decode_105(d: list[int], out: dict) -> None:
             out["driver_belt_buckled"] = yn.get((d[1] >> 5) & 3)
         out["passenger_belt_buckled"] = yn.get((d[1] >> 3) & 3)
         out["passenger_seat_occupied"] = yn.get((d[2] >> 6) & 3)
+    if len(d) >= 4:
+        out["pre_collision_active"] = bool(d[3] & 0x10)
     if len(d) >= 7:
         out["hybrid_strategy"] = {0x64: "CITY", 0x34: "HIGHWAY", 0x60: "PARK"}.get(d[6], f"0x{d[6]:02X}")
 

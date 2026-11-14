@@ -58,6 +58,16 @@ pub fn decode_restraints(data: &[u8]) -> Option<Restraints> {
     })
 }
 
+/// 0x105 B3 bit 4: Pre-Collision Assist / active braking intervention flag.
+/// Forwarded by Gateway Module (GWM). Toggles 0 -> 1 (0x09 -> 0x19) during
+/// forward collision warning / emergency deceleration (observed 2026-11-14).
+pub fn decode_pre_collision_active(data: &[u8]) -> Option<bool> {
+    if data.len() < 4 {
+        return None;
+    }
+    Some((data[3] & 0x10) != 0)
+}
+
 /// 0x1B3 BCM Broadcast: locks, lighting, door ajar, turn signals, ambient light.
 ///
 /// Turn signals (verified against GPS track heading over 16 turns, 0 contradictions):
