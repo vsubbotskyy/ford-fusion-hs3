@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.4.8 — 2026-11-14
 
 ### Added
+- **Pre-Collision Assist / Active Braking Flag (`0x105` B3 bit 4)**: Added `decode_pre_collision_active`
+  in `hs3-decode`, exposed `pre_collision_active` in Python `parse_frame`, and added `PreCollision_Active`
+  to DBC. Forwarded by Gateway Module (GWM) during active collision mitigation / emergency deceleration events.
 - **Rust ↔ Python parity test**: `rust/hs3-decode/tests/parity.rs` writes `testdata/parity/vectors.txt`
   (45 decoders × 122 deterministic payloads); `python/tests/test_parity.py` checks `parse_frame`
   against the same file, so the two implementations cannot drift apart silently.
