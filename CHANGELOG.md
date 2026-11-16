@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.9 — 2026-11-16
+
+### Added
+- **Electronic Stability Control (ESC) / Traction Control Active Flag (`0x106` B2 bit 2)**:
+  Added `decode_esc_active` in `hs3-decode`, exposed `esc_active` in Python `parse_frame`,
+  and added `ESC_Active` to DBC. Forwarded by Gateway Module (GWM) during wheel slip /
+  traction control intervention events (toggles 0 -> 1, e.g. `0x09`/`0x0A` -> `0x0E`).
+
 ## 0.4.8 — 2026-11-14
 
 ### Added
