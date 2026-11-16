@@ -24,6 +24,15 @@ pub fn decode_brake_pedal_pct(data: &[u8]) -> Option<f32> {
     Some(round_f32(pct * 10.0) / 10.0)
 }
 
+/// 0x106 Byte 2 Bit 2: Electronic Stability Control (ESC) / Traction Control active intervention flag.
+/// Toggles 0 -> 1 (0x09/0x0A -> 0x0E) during wheel slip / traction control intervention (observed 2026-11-16).
+pub fn decode_esc_active(data: &[u8]) -> Option<bool> {
+    if data.len() < 3 {
+        return None;
+    }
+    Some((data[2] & 0x04) != 0)
+}
+
 /// 0x106 Bytes 4-5 (longitudinal acceleration, Ford 10-bit)
 /// raw = ((B4 & 0x03) << 8) | B5; m/s² = raw * 0.035 - 17.9
 /// Live frames have B4 bits7-2 = 0x3E (B4=F9/FA/FB). B4=0x03 is sleep/sentinel companion.

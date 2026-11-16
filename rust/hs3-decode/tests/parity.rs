@@ -38,6 +38,7 @@ fn cases() -> Vec<(&'static str, u32, Dec)> {
         ("oil_life", 0x104, n!(d::decode_oil_life)),
         ("outside_temp", 0x104, n!(d::decode_outside_temp)),
         ("brake_pedal_pct", 0x106, n!(d::decode_brake_pedal_pct)),
+        ("esc_active", 0x106, n!(d::decode_esc_active)),
         ("longitudinal_accel", 0x106, n!(d::decode_longitudinal_accel)),
         ("106_raw12", 0x106, n!(d::decode_106_raw12)),
         ("vehicle_speed", 0x107, n!(d::decode_vehicle_speed)),

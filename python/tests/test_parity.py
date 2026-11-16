@@ -28,6 +28,7 @@ KEYS = {
     "oil_life": "oil_life_pct",
     "outside_temp": "outside_c",
     "brake_pedal_pct": "brake_pct",
+    "esc_active": "esc_active",
     "longitudinal_accel": "long_accel_ms2",
     "106_raw12": "raw12",
     "vehicle_speed": "speed_kmh",

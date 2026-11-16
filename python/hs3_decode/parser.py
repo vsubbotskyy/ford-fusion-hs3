@@ -175,6 +175,8 @@ def _decode_106(d: list[int], out: dict) -> None:
         raw = ((d[0] & 0x03) << 8) | d[1]
         if not (d[0] == 0x9F and d[1] == 0xFF):
             out["brake_pct"] = round(min(100.0, raw / 10.23), 1)
+        if len(d) >= 3:
+            out["esc_active"] = bool(d[2] & 0x04)
         if len(d) >= 4:
             cluster = (d[2] << 8) | d[3]
             out["brake_cluster"] = cluster

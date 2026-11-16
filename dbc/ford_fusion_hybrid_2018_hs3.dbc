@@ -54,6 +54,7 @@ BO_ 261 Msg_0x105: 8 Gateway
 
 BO_ 262 Msg_0x106: 8 Gateway
  SG_ Brake_Pedal_Pct : 7|10@0+ (0.09775,0) [0|100] "%" Vector__XXX
+ SG_ ESC_Active : 18|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Brake_Cluster : 23|16@0+ (1,0) [0|65535] "" Vector__XXX
  SG_ VehLong_A_Actl : 33|10@0+ (0.035,-17.9) [-17.9|17.85] "m/s2" Vector__XXX
  SG_ Raw12 : 51|12@0+ (1,0) [0|4095] "" Vector__XXX
@@ -213,6 +214,7 @@ CM_ SG_ 261 Driver_Belt "B1 bits 6:5. Not reported while Restraints_Valid (B1 bi
 CM_ SG_ 261 Passenger_Belt "B1 bits 4:3.";
 CM_ SG_ 261 Passenger_Occupied "B2 bits 7:6. Seat weight sensor; clears ~20 s after the seat empties.";
 CM_ SG_ 261 PreCollision_Active "B3 bit 4. Pre-Collision Assist / active braking intervention flag (0x19 active, 0x09 normal driving). Forwarded by GWM.";
+CM_ SG_ 262 ESC_Active "Electronic Stability Control / Traction Control active intervention flag on 0x106 B2 bit 2 (0x0E active, 0x09/0x0A normal). Forwarded by Gateway Module (GWM).";
 VAL_ 257 Gear_Selector 0 "P" 1 "R" 2 "N" 3 "D" ;
 VAL_ 261 Driver_Belt 1 "Buckled" 2 "Unbuckled" 3 "Init" ;
 VAL_ 261 Passenger_Belt 1 "Buckled" 2 "Unbuckled" 3 "Init" ;

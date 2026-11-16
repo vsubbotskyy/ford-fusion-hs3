@@ -43,6 +43,12 @@ class TestHs3Parser(unittest.TestCase):
         self.assertIsNone(dec["passenger_seat_occupied"])
         self.assertFalse(dec["pre_collision_active"])
 
+    def test_brake_and_esc(self):
+        dec_normal = parse_frame(0x106, [0x80, 0x00, 0x09, 0x10, 0xF9, 0xE7, 0xDA, 0xD0])
+        self.assertFalse(dec_normal["esc_active"])
+        dec_active = parse_frame(0x106, [0x80, 0x00, 0x0E, 0x6D, 0xF9, 0xE7, 0xDA, 0xD0])
+        self.assertTrue(dec_active["esc_active"])
+
     def test_load_and_parse_synthetic_csv(self):
         csv_path = Path(__file__).resolve().parents[2] / "testdata" / "synthetic_sample.csv"
         self.assertTrue(csv_path.exists(), f"Missing fixture at {csv_path}")

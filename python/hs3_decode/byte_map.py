@@ -104,7 +104,7 @@ BYTE_MAP: dict[int, list[tuple[str, str]]] = {
     0x106: [
         _s("brake demand high 2 bits + 0x80 baseline"),
         _s("brake demand low; pct=10bit/10.23"),
-        _f("brake-cluster mode: 09/0A moving 16-bit analog, 0B/13/1B stop sentinels"),
+        _f("brake-cluster mode: 09/0A moving 16-bit analog, 0B/13/1B stop sentinels, bit2 ESC/TCS active (0x0E intervention)"),
         _s("cluster low; 09xx-0Axx moving, FE with sentinels 0BFE/13FE/1BFE"),
         _s("long accel high 2 bits + live 3E nibble; m/s2=((B4&3)<<8|B5)*0.035-17.9"),
         _s("long accel low (Ford 10-bit; B4=03 sleep)"),

@@ -541,4 +541,17 @@ mod tests {
         // Short frame
         assert_eq!(decode_odometer_trip(&[0, 0, 0, 0, 0x00]), None);
     }
+
+    #[test]
+    fn test_esc_active() {
+        // Normal driving (0x09 or 0x0A) -> false
+        assert_eq!(decode_esc_active(&[0x80, 0x00, 0x09]), Some(false));
+        assert_eq!(decode_esc_active(&[0x80, 0x00, 0x0A]), Some(false));
+        // Active intervention (0x0E, bit 2 set) -> true
+        assert_eq!(decode_esc_active(&[0x80, 0x00, 0x0E]), Some(true));
+        // Parked / sentinel (0x00) -> false
+        assert_eq!(decode_esc_active(&[0x80, 0x00, 0x00]), Some(false));
+        // Truncated frame
+        assert_eq!(decode_esc_active(&[0x80, 0x00]), None);
+    }
 }

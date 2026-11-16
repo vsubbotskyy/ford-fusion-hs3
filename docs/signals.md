@@ -105,6 +105,16 @@ B1 bit 7 = valid (0 briefly after ignition on). Decoder: `decode_restraints` →
 Decoder: `decode_pre_collision_active` → `Option<bool>`.
 Forwarded by Gateway Module (GWM) from active safety / ABS arbitration. Observed 2026-11-14 during autonomous deceleration event.
 
+### Electronic Stability Control (ESC) / Traction Control Active — `0x106` B2 bit 2
+
+| Raw | State |
+|---|---|
+| 0 (`0x09`/`0x0A` driving / `0x00` parked) | Inactive / normal driving |
+| 1 (`0x0E`) | ESC / Traction Control intervention active |
+
+Decoder: `decode_esc_active` → `Option<bool>`.
+Forwarded by Gateway Module (GWM). Observed 2026-11-16 during wheel slip event on wet road.
+
 ---
 
 ## Not on this tap
