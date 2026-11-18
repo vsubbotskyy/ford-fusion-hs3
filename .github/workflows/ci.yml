@@ -17,6 +17,31 @@ jobs:
       - name: Run Cargo Tests
         run: cargo test --workspace --verbose
 
+  rust-lint:
+    name: Rust clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Clippy (warnings are errors)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  rust-no-std:
+    name: Rust no_std build (Cortex-M4F)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
+      # Libraries only: tests and examples need std. Proves the crates stay no_std.
+      - name: Build for thumbv7em-none-eabihf
+        run: cargo build --workspace --lib --target thumbv7em-none-eabihf
+
   python-test:
     name: Python Package & Parser Tests
     runs-on: ubuntu-latest
