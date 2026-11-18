@@ -85,6 +85,27 @@ Nibble bits 3:1 = 1 (closed) … 5 (fully open); bit 0 is a separate flag. Decod
 
 A P→D turn of the dial passes R and N within ~0.4 s. Decoder: `decode_gear_selector` → `GearSelector`.
 
+## Powertrain mode & ready indicator — `0x101` B0
+
+| Field | Bit | Value | Meaning |
+|---|---|---|---|
+| EV mode | B0 bit 7 (`0x80`) | 1 | Electric drive mode active |
+| ICE running | B0 bit 6 (`0x40`) | 1 | Internal combustion engine active |
+| Ready indicator | B0 bit 3 (`0x08`) | 1 | Instrument cluster green READY lamp illuminated |
+
+Decoders: `decode_powertrain_mode` → `PowertrainMode`, `decode_ev_mode` → `Option<bool>`, `decode_ice_active` → `Option<bool>`, `decode_ready_indicator` → `Option<bool>`.
+In steady-state driving, EV and ICE modes agree 100% with `0x142` B2 (7,186 EV frames, 4,530 engine frames across all paired captures).
+
+## Powertrain active — `0x107` B2 bit 7
+
+| Raw | State |
+|---|---|
+| `0x60` (bit 7 = 0) | Powertrain inactive / off |
+| `0xE0` (bit 7 = 1) | Powertrain active / HV contactors closed / car ready |
+
+Decoder: `decode_powertrain_active` → `Option<bool>`.
+Previously misattributed to gear position ("D"), which caused stationary parked frames with ignition on (`0xE0`) to report "D".
+
 ## Seat belts and passenger seat — `0x105`
 
 | Field | Bits | 1 | 2 | 3 |
@@ -135,6 +156,8 @@ These are documented so integrators do not publish them as physics.
 
 | Topic | Status |
 |---|---|
+| `0x107` B2 as gear position | **Retracted / Reclassified.** `0xE0` appears 26,571 times in Park (stationary with ignition on). Bit 7 indicates powertrain active (`decode_powertrain_active`), not gear position. Physical gear selector dial is on `0x101` B3 bits 5:4 (`decode_gear_selector`). `decode_gear_position` is deprecated and returns `None`. |
+| `0x10E` B7 as drive_alt / drive active | **Retracted.** Pulses `20 20 20 20 A0` at 2 Hz in a 4:1 cadence at 10 Hz (synchronous with B2 `05 05 05 05 95`). It is a telemetry cadence strobe (`decode_telemetry_cadence_strobe`), not a driving state. `decode_drive_alt` is deprecated and returns `None`. |
 | `0x10C` B6 as motor / inverter temp | **Retracted.** Uncorrelated with OBD motor coil or cabin temperature. `decode_motor_temp` returns `None`. |
 | `0x174` B3 bit 7 as low-fuel lamp | **Not the lamp.** Anti-slosh / gauge-commit strobe at low speed. Cluster lamp is unmapped on this tap. |
 | `0x174` B4–B7 | Open: B6:B7 monotonic counter; tracks neither distance nor fuel. Unknown. |

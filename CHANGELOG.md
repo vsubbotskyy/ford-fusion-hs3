@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.10 — 2026-11-18
+
+### Added
+- **Powertrain Mode & Ready Indicator (`0x101` B0)**:
+  Added `decode_powertrain_mode`, `decode_ev_mode`, `decode_ice_active`, and `decode_ready_indicator` in `hs3-decode`, exposed `ev_mode_101`, `ice_active`, and `ready_indicator` in Python `parse_frame`, and added signals to DBC. Bit 7 is EV drive mode, bit 6 is ICE running, bit 3 is the green cluster READY lamp. Agrees 100% with `0x142` in steady-state driving.
+- **Powertrain Active Flag (`0x107` B2 bit 7)**:
+  Added `decode_powertrain_active` in `hs3-decode` and exposed `powertrain_active` in Python `parse_frame`. `0xE0` indicates high-voltage contactors closed / vehicle operating state; `0x60` indicates parked/inactive.
+
+### Fixed / Retracted
+- **Fixed `0x107` B2 misattribution**: Previously mapped `0xE0` to gear position `"D"`. `0xE0` appears 26,571 times in Park (stationary with ignition on), causing parked cars to report Drive in telemetry. `decode_gear_position` is deprecated and returns `None`; physical rotary gear dial position is decoded via `decode_gear_selector` on `0x101` B3 bits 5:4.
+- **Retracted `0x10E` B7 `drive_alt`**: B7 pulses `20 20 20 20 A0` at 2 Hz in a 4:1 cadence at 10 Hz (synchronous with B2 `05 05 05 05 95`). It is a 2 Hz telemetry cadence strobe (`decode_telemetry_cadence_strobe`), not a drive state. `decode_drive_alt` is deprecated and returns `None`.
+
 ## 0.4.9 — 2026-11-16
 
 ### Added

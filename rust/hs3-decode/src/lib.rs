@@ -28,10 +28,41 @@ mod tests {
     }
 
     #[test]
-    fn test_gear_position() {
-        assert_eq!(decode_gear_position(&[0x00, 0x00, 0x60]), Some("P"));
-        assert_eq!(decode_gear_position(&[0x00, 0x00, 0xE0]), Some("D"));
-        assert_eq!(decode_gear_position(&[0x00, 0x00, 0x00]), None);
+    fn test_powertrain_active() {
+        assert_eq!(decode_powertrain_active(&[0x00, 0x00, 0x60]), Some(false));
+        assert_eq!(decode_powertrain_active(&[0x00, 0x00, 0xE0]), Some(true));
+        assert_eq!(decode_powertrain_active(&[0x00, 0x00, 0x00]), None);
+        #[allow(deprecated)]
+        {
+            assert_eq!(decode_gear_position(&[0x00, 0x00, 0x60]), None);
+            assert_eq!(decode_gear_position(&[0x00, 0x00, 0xE0]), None);
+        }
+    }
+
+    #[test]
+    fn test_powertrain_mode() {
+        let m = decode_powertrain_mode(&[0x88]).unwrap();
+        assert!(m.ev_mode);
+        assert!(!m.ice_active);
+        assert!(m.ready_indicator);
+        assert_eq!(decode_ev_mode(&[0x88]), Some(true));
+        assert_eq!(decode_ice_active(&[0x88]), Some(false));
+        assert_eq!(decode_ready_indicator(&[0x88]), Some(true));
+
+        let m_ice = decode_powertrain_mode(&[0x48]).unwrap();
+        assert!(!m_ice.ev_mode);
+        assert!(m_ice.ice_active);
+        assert!(m_ice.ready_indicator);
+
+        let m_init = decode_powertrain_mode(&[0x08]).unwrap();
+        assert!(!m_init.ev_mode);
+        assert!(!m_init.ice_active);
+        assert!(m_init.ready_indicator);
+
+        let m_off = decode_powertrain_mode(&[0x00]).unwrap();
+        assert!(!m_off.ev_mode);
+        assert!(!m_off.ice_active);
+        assert!(!m_off.ready_indicator);
     }
 
     #[test]
@@ -424,8 +455,12 @@ mod tests {
         assert_eq!(decode_transaxle_park(&[0, 0, 0x08]), Some(false));
         assert_eq!(decode_drive_active(&[0x17, 0, 0, 0, 0, 0, 0, 0x00]), Some(false));
         assert_eq!(decode_drive_active(&[0x17, 0, 0, 0, 0, 0, 0, 0x01]), Some(true));
-        assert_eq!(decode_drive_alt(&[0x17, 0, 0, 0, 0x20, 0x04, 0, 0xA0]), Some(true));
-        assert_eq!(decode_drive_alt(&[0x17, 0, 0, 0, 0x00, 0x00, 0, 0x20]), Some(false));
+        #[allow(deprecated)]
+        {
+            assert_eq!(decode_drive_alt(&[0x17, 0, 0, 0, 0x20, 0x04, 0, 0xA0]), None);
+        }
+        assert_eq!(decode_telemetry_cadence_strobe(&[0x17, 0, 0, 0, 0x20, 0x04, 0, 0xA0]), Some(true));
+        assert_eq!(decode_telemetry_cadence_strobe(&[0x17, 0, 0, 0, 0x00, 0x00, 0, 0x20]), Some(false));
         let ang = decode_motor_angle(&[0x00, 0x12, 0x34, 0x80]).unwrap();
         assert!((ang - 25.6).abs() < 0.05);
         assert_eq!(decode_motor_angle(&[0x00, 0x00, 0x00, 0x00]), None);

@@ -28,6 +28,9 @@ BO_ 256 Msg_0x100: 8 BCM
  SG_ Token_AliveBit : 63|1@0+ (1,0) [0|1] "" Vector__XXX
 
 BO_ 257 Msg_0x101: 8 Gateway
+ SG_ EV_Mode : 7|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ ICE_Active : 6|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ Ready_Indicator : 3|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Brake_Pressed : 32|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Gear_Selector : 29|2@0+ (1,0) [0|3] "" Vector__XXX
 
@@ -61,7 +64,7 @@ BO_ 262 Msg_0x106: 8 Gateway
 
 BO_ 263 Msg_0x107: 8 Gateway
  SG_ Vehicle_Speed : 7|16@0+ (0.01,0) [0|260] "km/h" Vector__XXX
- SG_ Park_Latch : 23|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Powertrain_Active : 23|1@0+ (1,0) [0|1] "" Vector__XXX
 
 BO_ 264 Msg_0x108: 8 Gateway
  SG_ Cabin_Temp : 7|8@0+ (0.5,-57) [-40|80] "degC" Vector__XXX
@@ -89,7 +92,7 @@ BO_ 270 Msg_0x10E: 8 BCM
  SG_ Drive_Alt_Bit5 : 37|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Drive_Alt_B5bit2 : 42|1@0+ (1,0) [0|1] "" Vector__XXX
  SG_ Analog_B6 : 55|8@0+ (1,0) [0|255] "" Vector__XXX
- SG_ Drive_Active : 63|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ Telemetry_Cadence_Strobe : 63|8@0+ (1,0) [0|255] "" Vector__XXX
 
 BO_ 271 Msg_0x10F: 8 Gateway
  SG_ HighRate_Raw16 : 7|16@0+ (1,0) [0|65535] "" Vector__XXX
@@ -215,6 +218,11 @@ CM_ SG_ 261 Passenger_Belt "B1 bits 4:3.";
 CM_ SG_ 261 Passenger_Occupied "B2 bits 7:6. Seat weight sensor; clears ~20 s after the seat empties.";
 CM_ SG_ 261 PreCollision_Active "B3 bit 4. Pre-Collision Assist / active braking intervention flag (0x19 active, 0x09 normal driving). Forwarded by GWM.";
 CM_ SG_ 262 ESC_Active "Electronic Stability Control / Traction Control active intervention flag on 0x106 B2 bit 2 (0x0E active, 0x09/0x0A normal). Forwarded by Gateway Module (GWM).";
+CM_ SG_ 257 EV_Mode "Powertrain EV drive mode indicator (0x101 B0 bit 7). Agrees 100% with 0x142 in steady state.";
+CM_ SG_ 257 ICE_Active "Internal combustion engine running (0x101 B0 bit 6). Agrees 100% with 0x142 in steady state.";
+CM_ SG_ 257 Ready_Indicator "Instrument cluster green READY lamp (0x101 B0 bit 3).";
+CM_ SG_ 263 Powertrain_Active "High voltage powertrain active / contactors closed (0x107 B2 bit 7, 0xE0 active, 0x60 inactive). Formerly misattributed to Park/Drive gear position.";
+CM_ SG_ 270 Telemetry_Cadence_Strobe "2 Hz telemetry cadence strobe (B7 pulses 20 20 20 20 A0 at 10 Hz, 4:1 ratio). Formerly misattributed to Drive_Active.";
 VAL_ 257 Gear_Selector 0 "P" 1 "R" 2 "N" 3 "D" ;
 VAL_ 261 Driver_Belt 1 "Buckled" 2 "Unbuckled" 3 "Init" ;
 VAL_ 261 Passenger_Belt 1 "Buckled" 2 "Unbuckled" 3 "Init" ;

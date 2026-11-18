@@ -32,9 +32,10 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **This-drive ICE distance** | `0x118` (280) | 8 | 4.9 Hz | Bytes 3–4 (16-bit BE) | `raw * 0.1` km | `0.0` $\rightarrow$ `40.6 km` | Δ matches lifetime ICE |
 | **Distance to Empty (DTE)** | `0x118` (280) | 8 | 4.9 Hz | Bytes 5–6 (16-bit BE) | `raw * 0.1` km | `1021.0` $\rightarrow$ `917.6 km` | Dash DTE display ($r=1.000$) |
 | **Vehicle Speed** | `0x107` (263) | 8 | ~1.8 kHz | Bytes 0–1 (16-bit BE) | `raw * 0.01` km/h | `0.0` $\rightarrow$ `130.0 km/h` | OBD Speed ($r=0.99995$) |
-| **Park latch** | `0x107` (263) | 8 | ~1.8 kHz | Byte 2 | `0x60`="P", `0xE0`=not-P | `"P"`, `"D"` (D means D/R/N) | Bit 7 only; N and R are not on this tap |
+| **Powertrain Active** | `0x107` (263) | 8 | ~1.8 kHz | Byte 2, Bit 7 | `0x60`=false, `0xE0`=true | `true`, `false` | High voltage active / ready state (was misattributed to gear position) |
 | **High-Res Empower Gauge** | `0x141` (321) | 8 | 2.4 Hz | Bytes 0–1 (16-bit BE) | `raw - 10000` | Center = 10000; drops on regen, rises on power |
 | **Digital Brake Switch** | `0x101` (257) | 8 | ~1.8 kHz | Byte 4, Bit 7 | `(b4 & 0x80) != 0` | `true`, `false` | Pedal contact switch |
+| **Powertrain Mode / EV / ICE / Ready** | `0x101` (257) | 8 | ~1.8 kHz | Byte 0 | Bit 7: EV mode (`0x80`), Bit 6: ICE active (`0x40`), Bit 3: Ready (`0x08`) | Mode enum / booleans | Agrees 100% with `0x142` in steady state |
 | **Brake Pedal Demand %** | `0x106` (262) | 8 | ~1.8 kHz | Bytes 0–1 (10-bit BE) | `(((b0 & 0x03) << 8) \| b1) / 10.23` | `0.0%` $\rightarrow$ `38.3%` moving (`50%` stop) | Proportional pedal travel |
 | **Accelerator Demand %** | `0x103` (259) | 8 | ~1.5 kHz | Bytes 0–1 (16-bit BE) | `((b0 - 0x80) << 8 \| b1) / 5.3` | `0.0%` $\rightarrow$ `100.0%` | OBD Throttle % ($r=0.998$) |
 | **Engine RPM** | `0x103` (259) | 8 | ~1.5 kHz | Bytes 2–3 (16-bit BE) | `(raw - 0xE000) * 2.0` | `0` $\rightarrow$ `5000 RPM` (idle ~`1250`) | OBD Engine RPM ($r=0.998$) |
@@ -73,7 +74,7 @@ These signals are decoded in `rust/hs3-decode` (pure `#![no_std]` functions), `p
 | **Gateway clock MM:SS** | `0x15E` mux `0x01` | 8 | ~1 Hz | B2=min, B3=sec | 0–59 | matches `0x084` | $\rho=0.995$ vs vehicle clock |
 | **Hybrid mode** | `0x105` (261) | 8 | ~1 Hz† | Byte 0 | `E0` parked, `E8` city, `F8` highway | discrete | vs speed / EV fraction |
 | **Transaxle Park** | `0x10A` (266) | 8 | ~1 Hz† | Byte 2 | `0x39`=P, `0x08`/`0x09`=not-P | Park vs not-Park | `0x08` held through Reverse |
-| **Drive-active** | `0x10E` (270) | 8 | 10 Hz | Byte 7 | `0x00` only at speed 0 | parked vs moving | vs `0x107` |
+| **Telemetry Cadence Strobe** | `0x10E` (270) | 8 | 10 Hz | Byte 7 | `0xA0` vs `0x20` | `true`, `false` | B7 pulses `20 20 20 20 A0` (4:1 cadence at 10 Hz, 2 Hz pulse); retracted as drive state |
 | **Trip average L/100 km** | `0x153` (339) | 8 | ~1.4 Hz | Bytes 4–5 BE | native `raw * 0.1` US mpg → `235.215 / mpg` | ~4–8 L/100 km typical | Cluster trip computer average |
 | **HV pack current** | `0x07A` (122) | 8 | ~1–3 Hz | B0 bits6-0 + B1 Motorola 15-bit | `raw * 0.05 − 750` A | −116 → +140 A | pedal discharge / brake regen |
 | **HV pack voltage** | `0x07A` (122) | 8 | ~1–3 Hz | B2 bits1-0 + B3 | `raw * 0.5` V | 266–304 V | Pack range (B4=326 V max, B5=152 V min) |

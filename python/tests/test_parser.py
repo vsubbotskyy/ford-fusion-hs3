@@ -6,10 +6,12 @@ from hs3_decode.parser import load_csv
 
 class TestHs3Parser(unittest.TestCase):
     def test_parse_individual_frames(self):
-        # 0x107: Speed 55.00 km/h
+        # 0x107: Speed 55.00 km/h, Powertrain Active
         dec = parse_frame(0x107, [0x15, 0x7C, 0xE0, 0x00, 0x00, 0x00, 0x00, 0x00])
         self.assertEqual(dec.get("speed_kmh"), 55.0)
-        self.assertEqual(dec.get("gear"), "D/R/N")
+        self.assertTrue(dec.get("powertrain_active"))
+        dec_park = parse_frame(0x107, [0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00])
+        self.assertFalse(dec_park.get("powertrain_active"))
 
         # 0x104: Coolant 84.0 C
         dec = parse_frame(0x104, [0x00, 0x00, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00])
@@ -106,12 +108,12 @@ class TestHs3Parser(unittest.TestCase):
         dec = parse_frame(0x10E, [0x17, 0, 0, 0, 0x20, 0x04, 0, 0xA0])
         self.assertEqual(dec.get("ignition"), "ON")
         self.assertTrue(dec.get("drive_active"))
-        self.assertTrue(dec.get("drive_alt"))
+        self.assertTrue(dec.get("telemetry_cadence_strobe"))
         self.assertTrue(dec.get("drive_alt_b4"))
         self.assertTrue(dec.get("drive_alt_b5"))
-        # drive_alt follows Rust decode_drive_alt (B7 == 0xA0), not the raw B4 bit.
+        # telemetry_cadence_strobe follows Rust decode_telemetry_cadence_strobe (B7 == 0xA0), not the raw B4 bit.
         dec = parse_frame(0x10E, [0x17, 0, 0, 0, 0x20, 0x04, 0, 1])
-        self.assertFalse(dec.get("drive_alt"))
+        self.assertFalse(dec.get("telemetry_cadence_strobe"))
         self.assertTrue(dec.get("drive_alt_b4"))
 
         # 0x10F: Raw16

@@ -122,6 +122,9 @@ def _decode_101(d: list[int], out: dict) -> None:
         out["brake_pressed"] = bool(d[4] & 0x80)
         out["gear_selector"] = "PRND"[(d[3] >> 4) & 3]
         out["pwrtrain"] = {0xE9: "mixed", 0xEA: "EV", 0xC7: "parked"}.get(d[7], f"0x{d[7]:02X}")
+        out["ev_mode_101"] = bool(d[0] & 0x80)
+        out["ice_active"] = bool(d[0] & 0x40)
+        out["ready_indicator"] = bool(d[0] & 0x08)
 
 
 def _decode_103(d: list[int], out: dict) -> None:
@@ -196,7 +199,8 @@ def _decode_107(d: list[int], out: dict) -> None:
         speed = be16(d, 0) * 0.01
         if speed < 260.0:  # same gate as Rust decode_vehicle_speed
             out["speed_kmh"] = speed
-        out["gear"] = {0x60: "P", 0xE0: "D/R/N"}.get(d[2])
+        if d[2] in (0x60, 0xE0):
+            out["powertrain_active"] = (d[2] == 0xE0)
 
 
 def _decode_108(d: list[int], out: dict) -> None:
@@ -245,8 +249,8 @@ def _decode_10e(d: list[int], out: dict) -> None:
         out["ignition"] = "STANDBY"
     if len(d) >= 8:
         out["drive_active"] = d[7] != 0
-        out["drive_alt"] = d[7] == 0xA0  # Rust decode_drive_alt
-        out["drive_alt_b4"] = bool(d[4] & 0x20)  # raw bit; equals drive_alt on every capture
+        out["telemetry_cadence_strobe"] = d[7] == 0xA0
+        out["drive_alt_b4"] = bool(d[4] & 0x20)  # raw bit
         out["drive_alt_b5"] = bool(d[5] & 0x04)
         out["slow_analog_b1"] = d[1]
         out["analog_b3"] = d[3]

@@ -8,16 +8,27 @@ pub fn decode_vehicle_speed(data: &[u8]) -> Option<f32> {
     if speed < 260.0 { Some(speed) } else { None }
 }
 
-/// 0x107 Byte 2: Park latch, not PRND. For P/R/N/D use [`decode_gear_selector`] (0x101).
-/// `0x60` = Park. `0xE0` = not Park (Drive, Neutral, and Reverse all use 0xE0).
-/// Across every HS3 log, B2 is only these two values; bit 7 is the only difference.
-pub fn decode_gear_position(data: &[u8]) -> Option<&'static str> {
+/// 0x107 Byte 2 bit 7: Powertrain active / HV contactors closed.
+/// `0x60` = unpowered/asleep Park (false). `0xE0` = powertrain active (true).
+/// Across every HS3 log, B2 is strictly these two values; bit 7 is the sole difference.
+///
+/// NOTE: 0x107 B2 was previously misidentified as `gear_position` ("P" vs "D"), but 0xE0
+/// appears 26,571 times while in Park with the powertrain on. For P/R/N/D use [`decode_gear_selector`] (0x101).
+pub fn decode_powertrain_active(data: &[u8]) -> Option<bool> {
     if data.len() < 3 { return None; }
     match data[2] {
-        0x60 => Some("P"),
-        0xE0 => Some("D"),
+        0x60 => Some(false),
+        0xE0 => Some(true),
         _ => None,
     }
+}
+
+/// RETRACTED: 0x107 Byte 2 is NOT gear position. `0xE0` appears 26,571 times while
+/// in Park with the powertrain on. Mapping 0xE0 to "D" was a bug that caused parked
+/// cars to report Drive. For P/R/N/D use [`decode_gear_selector`].
+#[deprecated(note = "0x107 B2 is powertrain active, not gear position. Use decode_gear_selector.")]
+pub fn decode_gear_position(_data: &[u8]) -> Option<&'static str> {
+    None
 }
 
 /// Gear selector (rotary dial) position.
@@ -50,6 +61,48 @@ pub fn decode_gear_selector(data: &[u8]) -> Option<GearSelector> {
         2 => GearSelector::Neutral,
         _ => GearSelector::Drive,
     })
+}
+
+/// Powertrain operating mode flags decoded from 0x101 Byte 0.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PowertrainMode {
+    /// Bit 7: Pure EV mode / electric traction drive active.
+    pub ev_mode: bool,
+    /// Bit 6: Gasoline Internal Combustion Engine (ICE) active / running.
+    pub ice_active: bool,
+    /// Bit 3: Powertrain "Ready to drive" status indicator (green car dash icon).
+    pub ready_indicator: bool,
+}
+
+/// 0x101 Byte 0: Powertrain operating mode flags:
+/// - Bit 7: EV mode active (0x80)
+/// - Bit 6: Internal Combustion Engine (ICE) active (0x40)
+/// - Bit 3: Ready to drive status indicator (0x08)
+pub fn decode_powertrain_mode(data: &[u8]) -> Option<PowertrainMode> {
+    let b0 = *data.first()?;
+    Some(PowertrainMode {
+        ev_mode: (b0 & 0x80) != 0,
+        ice_active: (b0 & 0x40) != 0,
+        ready_indicator: (b0 & 0x08) != 0,
+    })
+}
+
+/// 0x101 Byte 0 bit 7: EV propulsion active (0x80).
+pub fn decode_ev_mode(data: &[u8]) -> Option<bool> {
+    let b0 = *data.first()?;
+    Some((b0 & 0x80) != 0)
+}
+
+/// 0x101 Byte 0 bit 6: Internal Combustion Engine (ICE) running / active (0x40).
+pub fn decode_ice_active(data: &[u8]) -> Option<bool> {
+    let b0 = *data.first()?;
+    Some((b0 & 0x40) != 0)
+}
+
+/// 0x101 Byte 0 bit 3: Powertrain "Ready to drive" dash indicator (0x08).
+pub fn decode_ready_indicator(data: &[u8]) -> Option<bool> {
+    let b0 = *data.first()?;
+    Some((b0 & 0x08) != 0)
 }
 
 /// 0x103 Bytes 2-3 (Engine RPM & EV mode / running indicator)
@@ -196,8 +249,16 @@ pub fn decode_drive_active(data: &[u8]) -> Option<bool> {
     Some(data[7] != 0x00)
 }
 
-/// 0x10E B4 bit5 and B5 bit2 are 1 iff B7 == 0xA0 (all captures).
-pub fn decode_drive_alt(data: &[u8]) -> Option<bool> {
+/// RETRACTED: 0x10E Byte 7 (== 0xA0) is a periodic 2 Hz telemetry cadence/multiplex pulse
+/// (repeats 20 20 20 20 A0 at 10 Hz with 4:1 ratio), NOT an alternative drive state.
+#[deprecated(note = "0x10E B7 is a 2 Hz cadence strobe, not an alternative drive state.")]
+pub fn decode_drive_alt(_data: &[u8]) -> Option<bool> {
+    None
+}
+
+/// 0x10E Byte 7 == 0xA0: 2 Hz telemetry cadence strobe (repeats 20 20 20 20 A0 at 10 Hz with 4:1 ratio).
+/// NOTE: Previously misidentified as `drive_alt` (an alternative drive state).
+pub fn decode_telemetry_cadence_strobe(data: &[u8]) -> Option<bool> {
     if data.len() < 8 {
         return None;
     }
